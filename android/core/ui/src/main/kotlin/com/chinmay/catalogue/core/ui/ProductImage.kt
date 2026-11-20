@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
@@ -46,7 +47,7 @@ fun ProductImage(
             loading = { SkeletonBox(Modifier.fillMaxSize(), shape) },
             error = {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No image", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.core_ui_no_image), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
                 }
             },
             modifier = Modifier.fillMaxSize().padding(padding),

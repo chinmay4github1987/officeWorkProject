@@ -2,5 +2,10 @@
     <string name="feature_product_back">Back</string>
     <string name="feature_product_about">About this product</string>
     <string name="feature_product_enquire">Enquire about this product</string>
+    <string name="feature_product_enquire_short">Enquire</string>
+    <string name="feature_product_add_to_cart">Add to cart</string>
+    <string name="feature_product_added">Added to your cart</string>
+    <string name="feature_product_view_cart">View cart</string>
+    <string name="feature_product_add_failed">Couldn\'t add to cart. Please try again.</string>
     <string name="feature_product_enquire_hint">Our sales team usually replies within one working day.</string>
 </resources>

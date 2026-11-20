@@ -7,5 +7,10 @@
     <string name="core_ui_error_rate_limited_message">Please wait a minute, then try again.</string>
     <string name="core_ui_error_generic_title">Something went wrong</string>
     <string name="core_ui_error_generic_message">Please try again in a moment.</string>
+    <string name="core_ui_error_invalid_credentials_title">Couldn\'t sign in</string>
+    <string name="core_ui_error_invalid_credentials_message">That username and password don\'t match. Check them and try again.</string>
+    <string name="core_ui_error_unauthorized_title">Please sign in</string>
+    <string name="core_ui_error_unauthorized_message">Your session has ended. Sign in again to see your cart.</string>
     <string name="core_ui_retry">Try again</string>
+    <string name="core_ui_no_image">No image</string>
 </resources>

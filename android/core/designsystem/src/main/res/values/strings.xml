@@ -1,0 +1,5 @@
+<resources>
+    <string name="core_designsystem_rating_description">Rated %1$s out of 5 from %2$d reviews</string>
+    <string name="core_designsystem_read_more">Read more</string>
+    <string name="core_designsystem_show_less">Show less</string>
+</resources>

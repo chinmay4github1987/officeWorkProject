@@ -1,5 +1,6 @@
 package com.chinmay.catalogue.feature.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,17 +16,37 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,21 +72,28 @@ internal fun HomeRoute(
     onSearchClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onCategoryClick: (Category) -> Unit,
+    onCartClick: () -> Unit,
+    onSignInClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val account by viewModel.account.collectAsStateWithLifecycle()
     HomeScreen(
         state = state,
+        account = account,
         onSearchClick = onSearchClick,
         onProductClick = onProductClick,
         onCategoryClick = onCategoryClick,
+        onCartClick = onCartClick,
+        onSignInClick = onSignInClick,
+        onSignOutClick = viewModel::signOut,
         onRetry = viewModel::retry,
         onRefresh = viewModel::refresh,
     )
 }
 
 /** Stateless: renders whatever state it is given, so it can be previewed and tested without a ViewModel. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun HomeScreen(
     state: HomeUiState,
@@ -74,19 +102,34 @@ internal fun HomeScreen(
     onCategoryClick: (Category) -> Unit,
     onRetry: () -> Unit,
     onRefresh: () -> Unit,
+    account: HomeAccount = HomeAccount(),
+    onCartClick: () -> Unit = {},
+    onSignInClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {},
 ) {
     Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
         PullToRefreshBox(
             isRefreshing = (state as? HomeUiState.Success)?.isRefreshing == true,
             onRefresh = onRefresh,
-            modifier = Modifier.fillMaxSize().padding(padding),
+            // Content stops at the status bar, so the pinned search bar never slides under the clock.
+            modifier = Modifier.fillMaxSize().padding(padding).statusBarsPadding(),
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().navigationBarsPadding(),
                 contentPadding = PaddingValues(bottom = Spacing.xxl),
                 verticalArrangement = Arrangement.spacedBy(Spacing.lg),
             ) {
-                item { Header(onSearchClick) }
+                item { Header(account, onCartClick, onSignInClick, onSignOutClick) }
+                // Search stays pinned while you scroll: the fastest route to a product is always one tap away.
+                stickyHeader(key = "search") {
+                    Surface(color = MaterialTheme.colorScheme.background) {
+                        SearchPill(
+                            stringResource(R.string.feature_home_search_placeholder),
+                            onClick = onSearchClick,
+                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+                        )
+                    }
+                }
                 when (state) {
                     HomeUiState.Loading -> item { LoadingContent() }
                     is HomeUiState.Error -> item { DataErrorState(state.error, onRetry) }
@@ -130,23 +173,76 @@ internal fun HomeScreen(
 }
 
 @Composable
-private fun Header(onSearchClick: () -> Unit) {
+private fun Header(account: HomeAccount, onCartClick: () -> Unit, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
     Column(
-        Modifier.statusBarsPadding().padding(horizontal = Spacing.lg).padding(top = Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        Modifier.padding(start = Spacing.lg, end = Spacing.sm).padding(top = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        Text(
-            stringResource(R.string.feature_home_title),
-            style = MaterialTheme.typography.displaySmall,
-            modifier = Modifier.semantics { heading() },
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                account.user?.let { stringResource(R.string.feature_home_greeting, it.firstName) } ?: stringResource(R.string.feature_home_title),
+                style = MaterialTheme.typography.displaySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).semantics { heading() },
+            )
+            AccountButton(account, onSignInClick, onSignOutClick)
+            CartButton(account.cartCount, onCartClick)
+        }
         Text(
             stringResource(R.string.feature_home_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = Spacing.sm),
         )
-        Spacer(Modifier.height(Spacing.sm))
-        SearchPill(stringResource(R.string.feature_home_search_placeholder), onClick = onSearchClick)
+    }
+}
+
+/** Cart with a count badge. The badge is part of the button's label for screen readers. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CartButton(count: Int, onClick: () -> Unit) {
+    val label = if (count > 0) {
+        pluralStringResource(R.plurals.feature_home_cart_with_items, count, count)
+    } else {
+        stringResource(R.string.feature_home_cart)
+    }
+    IconButton(onClick = onClick, modifier = Modifier.semantics { contentDescription = label }) {
+        BadgedBox(badge = { if (count > 0) Badge { Text(if (count > 99) "99+" else count.toString()) } }) {
+            Icon(Icons.Filled.ShoppingCart, contentDescription = null)
+        }
+    }
+}
+
+/** Signed out: goes straight to sign-in. Signed in: a small menu with who you are and Sign out. */
+@Composable
+private fun AccountButton(account: HomeAccount, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val user = account.user
+    Box {
+        IconButton(onClick = { if (user == null) onSignInClick() else menuOpen = true }) {
+            Icon(
+                Icons.Filled.AccountCircle,
+                contentDescription = stringResource(if (user == null) R.string.feature_home_sign_in else R.string.feature_home_account),
+            )
+        }
+        DropdownMenu(expanded = menuOpen && user != null, onDismissRequest = { menuOpen = false }) {
+            if (user != null) {
+                Column(Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
+                    Text(user.fullName, style = MaterialTheme.typography.titleSmall)
+                    Text(user.email, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                HorizontalDivider()
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.feature_home_sign_out)) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
+                    onClick = {
+                        menuOpen = false
+                        onSignOutClick()
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -159,8 +255,8 @@ private fun LoadingContent() {
         }
         repeat(2) {
             Row(Modifier.padding(horizontal = Spacing.lg), horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                SkeletonBox(Modifier.weight(1f).height(96.dp), MaterialTheme.shapes.large)
-                SkeletonBox(Modifier.weight(1f).height(96.dp), MaterialTheme.shapes.large)
+                SkeletonBox(Modifier.weight(1f).height(104.dp), MaterialTheme.shapes.large)
+                SkeletonBox(Modifier.weight(1f).height(104.dp), MaterialTheme.shapes.large)
             }
         }
     }

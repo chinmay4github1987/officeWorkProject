@@ -29,6 +29,8 @@ fun errorText(error: DataError): Pair<String, String> = when (error) {
     DataError.Network -> stringResource(R.string.core_ui_error_network_title) to stringResource(R.string.core_ui_error_network_message)
     DataError.NotFound -> stringResource(R.string.core_ui_error_not_found_title) to stringResource(R.string.core_ui_error_not_found_message)
     DataError.RateLimited -> stringResource(R.string.core_ui_error_rate_limited_title) to stringResource(R.string.core_ui_error_rate_limited_message)
+    DataError.InvalidCredentials -> stringResource(R.string.core_ui_error_invalid_credentials_title) to stringResource(R.string.core_ui_error_invalid_credentials_message)
+    DataError.Unauthorized -> stringResource(R.string.core_ui_error_unauthorized_title) to stringResource(R.string.core_ui_error_unauthorized_message)
     is DataError.Server -> stringResource(R.string.core_ui_error_generic_title) to (error.message ?: stringResource(R.string.core_ui_error_generic_message))
     is DataError.Validation -> stringResource(R.string.core_ui_error_generic_title) to stringResource(R.string.core_ui_error_generic_message)
 }

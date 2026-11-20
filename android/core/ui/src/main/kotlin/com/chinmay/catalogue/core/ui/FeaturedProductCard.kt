@@ -18,6 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.chinmay.catalogue.core.designsystem.component.pressScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.chinmay.catalogue.core.designsystem.component.RatingBadge
@@ -28,12 +31,14 @@ import com.chinmay.catalogue.core.model.Product
 /** Large card for "Top rated" carousels. The rank badge makes the curated order visible. */
 @Composable
 fun FeaturedProductCard(product: Product, rank: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val interaction = remember { MutableInteractionSource() }
     Card(
         onClick = onClick,
+        interactionSource = interaction,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier.width(FeaturedCardWidth),
+        modifier = modifier.pressScale(interaction).width(FeaturedCardWidth),
     ) {
         Box {
             ProductImage(

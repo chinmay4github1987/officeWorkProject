@@ -7,6 +7,14 @@
     <string name="feature_search_idle_title">Find a product</string>
     <string name="feature_search_idle_message">Search by name, description or category, then tap Search.</string>
     <string name="feature_search_empty_title">No matches for “%1$s”</string>
+    <string name="feature_search_suggestions_title">Popular searches</string>
+    <string-array name="feature_search_suggestions">
+        <item>jacket</item>
+        <item>backpack</item>
+        <item>ssd</item>
+        <item>ring</item>
+        <item>shirt</item>
+    </string-array>
     <string name="feature_search_empty_message">Check the spelling, or try a broader word like “shirt” or “drive”.</string>
     <plurals name="feature_search_results">
         <item quantity="one">%1$d result for “%2$s”</item>

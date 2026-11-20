@@ -2,7 +2,9 @@ package com.chinmay.catalogue.core.network.di
 
 import com.chinmay.catalogue.core.network.BuildConfig
 import com.chinmay.catalogue.core.network.CatalogueApi
+import com.chinmay.catalogue.core.network.AuthInterceptor
 import com.chinmay.catalogue.core.network.NetworkFactory
+import com.chinmay.catalogue.core.network.SessionTokenProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,9 +25,11 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+    fun provideOkHttpClient(tokens: SessionTokenProvider): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
+        // Adds the session token while signed in (the BASIC debug log below never prints headers).
+        .addInterceptor(AuthInterceptor(tokens))
         .apply {
             // Request logging in debug builds only; release builds never log traffic (it contains customer details).
             if (BuildConfig.DEBUG) {

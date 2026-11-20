@@ -31,6 +31,7 @@ private fun HttpException.toDataError(json: Json): DataError {
     val error = body?.let { runCatching { json.decodeFromString<ErrorEnvelopeDto>(it).error }.getOrNull() }
     return when (code()) {
         400 -> if (error?.fields?.isNotEmpty() == true) DataError.Validation(error.fields) else DataError.Server(error?.message)
+        401 -> if (error?.code == "INVALID_CREDENTIALS") DataError.InvalidCredentials else DataError.Unauthorized
         404 -> DataError.NotFound
         429 -> DataError.RateLimited
         else -> DataError.Server(error?.message)

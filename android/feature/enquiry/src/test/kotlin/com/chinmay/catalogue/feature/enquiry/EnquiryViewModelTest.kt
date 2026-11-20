@@ -3,7 +3,9 @@ package com.chinmay.catalogue.feature.enquiry
 import androidx.lifecycle.SavedStateHandle
 import com.chinmay.catalogue.core.model.DataError
 import com.chinmay.catalogue.core.model.EnquiryRequest
+import com.chinmay.catalogue.core.testing.FakeAuthRepository
 import com.chinmay.catalogue.core.testing.FakeCatalogueRepository
+import com.chinmay.catalogue.core.testing.TestData
 import com.chinmay.catalogue.core.testing.FakeEnquiryRepository
 import com.chinmay.catalogue.core.testing.MainDispatcherRule
 import org.junit.Assert.assertEquals
@@ -18,8 +20,9 @@ class EnquiryViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val enquiries = FakeEnquiryRepository()
+    private val auth = FakeAuthRepository()
     // Lazy: created inside the test, after MainDispatcherRule has replaced Dispatchers.Main (init launches a coroutine).
-    private val viewModel by lazy { EnquiryViewModel(SavedStateHandle(mapOf("productId" to "3")), FakeCatalogueRepository(), enquiries) }
+    private val viewModel by lazy { EnquiryViewModel(SavedStateHandle(mapOf("productId" to "3")), FakeCatalogueRepository(), enquiries, auth) }
 
     private fun fill(name: String = "  Asha Rao ", email: String = "asha@example.com", phone: String = "", message: String = "Is it waterproof?") {
         viewModel.onFieldChange(EnquiryField.Name, name)
@@ -90,5 +93,15 @@ class EnquiryViewModelTest {
         viewModel.onSubmit()
 
         assertEquals(1, enquiries.submitted.size)
+    }
+
+    @Test
+    fun `a signed-in customer's details are filled in for them`() {
+        auth.signIn()
+
+        val form = viewModel.uiState.value.form
+        assertEquals(TestData.user.fullName, form.name)
+        assertEquals(TestData.user.email, form.email)
+        assertEquals(TestData.user.phone, form.phone)
     }
 }

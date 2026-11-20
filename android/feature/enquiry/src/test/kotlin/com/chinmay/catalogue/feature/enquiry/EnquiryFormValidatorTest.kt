@@ -13,7 +13,7 @@ class EnquiryFormValidatorTest {
     }
 
     @Test
-    fun `name and email are required; whitespace doesn't count`() {
+    fun `name and email are required, whitespace doesn't count`() {
         val errors = EnquiryFormValidator.validate(EnquiryForm(name = "   ", email = ""))
         assertEquals(mapOf(EnquiryField.Name to FieldError.Required, EnquiryField.Email to FieldError.Required), errors)
     }

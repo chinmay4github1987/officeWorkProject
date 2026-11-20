@@ -12,6 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.chinmay.catalogue.feature.auth.navigation.loginScreen
+import com.chinmay.catalogue.feature.auth.navigation.navigateToLogin
+import com.chinmay.catalogue.feature.cart.navigation.cartScreen
+import com.chinmay.catalogue.feature.cart.navigation.navigateToCart
 import com.chinmay.catalogue.feature.category.navigation.categoryScreen
 import com.chinmay.catalogue.feature.category.navigation.navigateToCategory
 import com.chinmay.catalogue.feature.enquiry.navigation.enquiryScreen
@@ -42,6 +46,8 @@ fun CatalogueNavHost(navController: NavHostController = rememberNavController())
             onSearchClick = navController::navigateToSearch,
             onProductClick = navController::navigateToProduct,
             onCategoryClick = { navController.navigateToCategory(it.slug, it.name) },
+            onCartClick = navController::navigateToCart,
+            onSignInClick = navController::navigateToLogin,
         )
         categoryScreen(
             onBack = navController::popBackStack,
@@ -55,6 +61,20 @@ fun CatalogueNavHost(navController: NavHostController = rememberNavController())
             onBack = navController::popBackStack,
             onEnquire = navController::navigateToEnquiry,
             onCategoryClick = { navController.navigateToCategory(it.slug, it.name) },
+            onViewCart = navController::navigateToCart,
+            // Sign in, then come straight back to this product to add it.
+            onSignInRequired = navController::navigateToLogin,
+        )
+        loginScreen(
+            onClose = navController::popBackStack,
+            // Back to wherever sign-in was needed (product, cart or home); those screens react to the new session.
+            onSignedIn = { navController.popBackStack() },
+        )
+        cartScreen(
+            onBack = navController::popBackStack,
+            onSignIn = navController::navigateToLogin,
+            onProductClick = navController::navigateToProduct,
+            onContinueBrowsing = { navController.popBackStack(HomeDestination, inclusive = false) },
         )
         enquiryScreen(
             onClose = navController::popBackStack,

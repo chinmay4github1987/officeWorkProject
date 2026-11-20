@@ -5,4 +5,13 @@
     <string name="feature_home_top_rated">Top rated</string>
     <string name="feature_home_top_rated_subtitle">Chosen by our team</string>
     <string name="feature_home_categories">Shop by category</string>
+    <string name="feature_home_greeting">Hi, %1$s</string>
+    <string name="feature_home_cart">Cart</string>
+    <plurals name="feature_home_cart_with_items">
+        <item quantity="one">Cart, %1$d item</item>
+        <item quantity="other">Cart, %1$d items</item>
+    </plurals>
+    <string name="feature_home_sign_in">Sign in</string>
+    <string name="feature_home_account">Account</string>
+    <string name="feature_home_sign_out">Sign out</string>
 </resources>

@@ -1,0 +1,28 @@
+<resources>
+    <string name="feature_cart_title">Your cart</string>
+    <string name="feature_cart_back">Back</string>
+    <plurals name="feature_cart_item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="feature_cart_each">%1$s each</string>
+    <string name="feature_cart_remove">Remove %1$s</string>
+    <string name="feature_cart_decrease">One fewer %1$s</string>
+    <string name="feature_cart_increase">One more %1$s</string>
+    <string name="feature_cart_total">Total</string>
+    <string name="feature_cart_send">Send enquiry for these items</string>
+    <string name="feature_cart_sending">Sending…</string>
+    <string name="feature_cart_send_hint">No payment now. Our sales team will reply with availability and delivery.</string>
+    <string name="feature_cart_message">Message (optional)</string>
+    <string name="feature_cart_message_placeholder">Ask about sizes, stock, delivery…</string>
+    <string name="feature_cart_dismiss">Dismiss</string>
+    <string name="feature_cart_signed_out_title">Sign in to see your cart</string>
+    <string name="feature_cart_signed_out_message">Your cart is saved to your account, so it\'s there on every visit.</string>
+    <string name="feature_cart_sign_in">Sign in</string>
+    <string name="feature_cart_empty_title">Your cart is empty</string>
+    <string name="feature_cart_empty_message">Open a product and tap Add to cart. You can ask about everything at once.</string>
+    <string name="feature_cart_browse">Continue browsing</string>
+    <string name="feature_cart_sent_title">Enquiry sent</string>
+    <string name="feature_cart_sent_body">Our sales team has your cart and will reply to %1$s.</string>
+    <string name="feature_cart_reference">Reference %1$s</string>
+</resources>

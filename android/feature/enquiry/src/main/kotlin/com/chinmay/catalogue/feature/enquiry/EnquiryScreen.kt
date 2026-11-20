@@ -30,11 +30,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -66,6 +69,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.chinmay.catalogue.core.designsystem.component.PrimaryButton
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
 import com.chinmay.catalogue.core.model.Product
 import com.chinmay.catalogue.core.ui.ProductImage
@@ -142,15 +147,17 @@ private fun Form(state: EnquiryUiState, onFieldChange: (EnquiryField, String) ->
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        FormField(state, EnquiryField.Name, R.string.feature_enquiry_name, onFieldChange,
+        // Leading icons let people scan the form and see at a glance what each field wants.
+        FormField(state, EnquiryField.Name, R.string.feature_enquiry_name, Icons.Filled.Person, onFieldChange,
             KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next))
-        FormField(state, EnquiryField.Email, R.string.feature_enquiry_email, onFieldChange,
+        FormField(state, EnquiryField.Email, R.string.feature_enquiry_email, Icons.Filled.Email, onFieldChange,
             KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next))
-        FormField(state, EnquiryField.Phone, R.string.feature_enquiry_phone, onFieldChange,
+        FormField(state, EnquiryField.Phone, R.string.feature_enquiry_phone, Icons.Filled.Phone, onFieldChange,
             KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next))
-        FormField(state, EnquiryField.Message, R.string.feature_enquiry_message, onFieldChange,
+        FormField(state, EnquiryField.Message, R.string.feature_enquiry_message, Icons.Filled.Edit, onFieldChange,
             KeyboardOptions(capitalization = KeyboardCapitalization.Sentences), singleLine = false,
-            placeholder = stringResource(R.string.feature_enquiry_message_placeholder))
+            placeholder = stringResource(R.string.feature_enquiry_message_placeholder),
+            maxLength = EnquiryFormValidator.MESSAGE_MAX)
 
         state.submitError?.let { error ->
             val (title, message) = errorText(error)
@@ -169,24 +176,21 @@ private fun Form(state: EnquiryUiState, onFieldChange: (EnquiryField, String) ->
             }
         }
 
-        Text(
-            stringResource(R.string.feature_enquiry_privacy),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(
-            onClick = onSubmit,
-            enabled = !state.isSubmitting,
-            shape = MaterialTheme.shapes.medium,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-        ) {
-            if (state.isSubmitting) {
-                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                Text(stringResource(R.string.feature_enquiry_sending), modifier = Modifier.padding(start = Spacing.sm))
-            } else {
-                Text(stringResource(R.string.feature_enquiry_submit))
-            }
+        // Reassurance right before the commitment point.
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            Text(
+                stringResource(R.string.feature_enquiry_privacy),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
+        PrimaryButton(
+            text = stringResource(R.string.feature_enquiry_submit),
+            onClick = onSubmit,
+            loading = state.isSubmitting,
+            loadingText = stringResource(R.string.feature_enquiry_sending),
+        )
         Spacer(Modifier.navigationBarsPadding().height(Spacing.lg))
     }
 }
@@ -196,19 +200,36 @@ private fun FormField(
     state: EnquiryUiState,
     field: EnquiryField,
     @StringRes label: Int,
+    leadingIcon: ImageVector,
     onFieldChange: (EnquiryField, String) -> Unit,
     keyboardOptions: KeyboardOptions,
     singleLine: Boolean = true,
     placeholder: String? = null,
+    maxLength: Int? = null,
 ) {
     val error = state.errors[field]
+    val value = state.form.valueOf(field)
     OutlinedTextField(
-        value = state.form.valueOf(field),
+        value = value,
         onValueChange = { onFieldChange(field, it) },
         label = { Text(stringResource(label)) },
         placeholder = if (placeholder != null) { { Text(placeholder) } } else null,
+        leadingIcon = { Icon(leadingIcon, contentDescription = null) },
         isError = error != null,
-        supportingText = if (error != null) { { Text(errorMessage(error, field)) } } else null,
+        supportingText = when {
+            error != null -> { { Text(errorMessage(error, field)) } }
+            // A live counter shows the limit before you hit it, not after.
+            maxLength != null -> {
+                {
+                    Text(
+                        stringResource(R.string.feature_enquiry_counter, value.length, maxLength),
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            else -> null
+        },
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 4,
         enabled = !state.isSubmitting,
@@ -278,7 +299,7 @@ private fun ThankYou(state: EnquiryUiState, onBackToProduct: () -> Unit, onConti
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
         Text(
-            stringResource(R.string.feature_enquiry_thanks_body, state.product?.title ?: "this product", state.form.email.trim()),
+            stringResource(R.string.feature_enquiry_thanks_body, state.product?.title ?: stringResource(R.string.feature_enquiry_this_product), state.form.email.trim()),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -291,9 +312,7 @@ private fun ThankYou(state: EnquiryUiState, onBackToProduct: () -> Unit, onConti
             )
         }
         Spacer(Modifier.height(Spacing.sm))
-        Button(onClick = onBackToProduct, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            Text(stringResource(R.string.feature_enquiry_back_to_product))
-        }
+        PrimaryButton(stringResource(R.string.feature_enquiry_back_to_product), onClick = onBackToProduct)
         TextButton(onClick = onContinueBrowsing) { Text(stringResource(R.string.feature_enquiry_continue)) }
     }
 }

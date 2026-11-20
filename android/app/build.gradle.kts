@@ -34,6 +34,8 @@ dependencies {
     implementation(project(":feature:search"))
     implementation(project(":feature:product"))
     implementation(project(":feature:enquiry"))
+    implementation(project(":feature:auth"))
+    implementation(project(":feature:cart"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

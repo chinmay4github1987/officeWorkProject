@@ -1,0 +1,18 @@
+<resources>
+    <string name="feature_auth_close">Close</string>
+    <string name="feature_auth_title">Sign in</string>
+    <string name="feature_auth_subtitle">Sign in to keep products in your cart and ask about all of them in one enquiry.</string>
+    <string name="feature_auth_username">Username</string>
+    <string name="feature_auth_password">Password</string>
+    <string name="feature_auth_show">Show</string>
+    <string name="feature_auth_hide">Hide</string>
+    <string name="feature_auth_username_required">Enter your username</string>
+    <string name="feature_auth_password_required">Enter your password</string>
+    <string name="feature_auth_submit">Sign in</string>
+    <string name="feature_auth_signing_in">Signing in…</string>
+    <!-- Fake Store's public demo account (https://fakestoreapi.com/docs). Shown in debug builds only. -->
+    <string name="feature_auth_demo_hint">Demo account: %1$s</string>
+    <string name="feature_auth_demo_use">Use it</string>
+    <string name="feature_auth_demo_username" translatable="false">johnd</string>
+    <string name="feature_auth_demo_password" translatable="false">m38rmF$</string>
+</resources>

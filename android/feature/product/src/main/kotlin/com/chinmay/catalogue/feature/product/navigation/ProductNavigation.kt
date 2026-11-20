@@ -16,8 +16,16 @@ fun NavGraphBuilder.productScreen(
     onBack: () -> Unit,
     onEnquire: (String) -> Unit,
     onCategoryClick: (Category) -> Unit,
+    onViewCart: () -> Unit,
+    onSignInRequired: () -> Unit,
 ) {
     composable<ProductDestination> {
-        ProductRoute(onBack = onBack, onEnquire = onEnquire, onCategoryClick = onCategoryClick)
+        ProductRoute(
+            onBack = onBack,
+            onEnquire = onEnquire,
+            onCategoryClick = onCategoryClick,
+            onViewCart = onViewCart,
+            onSignInRequired = onSignInRequired,
+        )
     }
 }

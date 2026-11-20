@@ -1,6 +1,9 @@
 package com.chinmay.catalogue.feature.search
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +41,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -83,6 +88,11 @@ internal fun SearchScreen(
         keyboard?.hide()
         onSearch()
     }
+    // A suggestion is a shortcut for typing the word and tapping Search.
+    val searchFor = { term: String ->
+        onQueryChange(term)
+        submit()
+    }
     // Opening search means you want to type: focus the field and show the keyboard straight away.
     LaunchedEffect(Unit) { if (state.results == SearchResults.Idle) focusRequester.requestFocus() }
 
@@ -90,9 +100,10 @@ internal fun SearchScreen(
         topBar = {
             Row(
                 Modifier.fillMaxWidth().statusBarsPadding().padding(top = Spacing.md).padding(horizontal = Spacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
+                // Top-aligned with matching 56dp heights, so the button doesn't jump when the error text appears.
+                verticalAlignment = Alignment.Top,
             ) {
-                IconButton(onClick = onBack) {
+                IconButton(onClick = onBack, modifier = Modifier.padding(top = 4.dp)) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.feature_search_back))
                 }
                 OutlinedTextField(
@@ -118,7 +129,7 @@ internal fun SearchScreen(
                 )
                 Button(
                     onClick = submit,
-                    modifier = Modifier.padding(start = Spacing.sm, end = Spacing.sm).height(52.dp),
+                    modifier = Modifier.padding(start = Spacing.sm, end = Spacing.sm).height(56.dp),
                     contentPadding = PaddingValues(horizontal = Spacing.lg),
                 ) {
                     Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.padding(end = Spacing.xs))
@@ -137,18 +148,25 @@ internal fun SearchScreen(
             val full: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
             when (val results = state.results) {
                 SearchResults.Idle -> item(span = full) {
-                    MessageState(Icons.Filled.Search, stringResource(R.string.feature_search_idle_title), stringResource(R.string.feature_search_idle_message))
+                    Column {
+                        MessageState(Icons.Filled.Search, stringResource(R.string.feature_search_idle_title), stringResource(R.string.feature_search_idle_message))
+                        Suggestions(onPick = searchFor)
+                    }
                 }
                 SearchResults.Loading -> items(6) { ProductTileSkeleton() }
                 is SearchResults.Error -> item(span = full) { DataErrorState(results.error, onRetry = onSearch) }
                 is SearchResults.Found -> {
                     if (results.products.isEmpty()) {
                         item(span = full) {
-                            MessageState(
-                                Icons.Filled.Search,
-                                stringResource(R.string.feature_search_empty_title, results.term),
-                                stringResource(R.string.feature_search_empty_message),
-                            )
+                            // No dead ends: an empty result offers something to try next.
+                            Column {
+                                MessageState(
+                                    Icons.Filled.Search,
+                                    stringResource(R.string.feature_search_empty_title, results.term),
+                                    stringResource(R.string.feature_search_empty_message),
+                                )
+                                Suggestions(onPick = searchFor)
+                            }
                         }
                     } else {
                         item(span = full) {
@@ -164,6 +182,27 @@ internal fun SearchScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** Tappable starting points, so an empty screen always has a next step. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun Suggestions(onPick: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            stringResource(R.string.feature_search_suggestions_title),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FlowRow(
+            modifier = Modifier.padding(top = Spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.CenterHorizontally),
+        ) {
+            stringArrayResource(R.array.feature_search_suggestions).forEach { term ->
+                SuggestionChip(onClick = { onPick(term) }, label = { Text(term) }, shape = MaterialTheme.shapes.extraLarge)
             }
         }
     }

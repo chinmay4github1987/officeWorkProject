@@ -3,6 +3,7 @@ package com.chinmay.catalogue.feature.enquiry
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chinmay.catalogue.core.data.repository.AuthRepository
 import com.chinmay.catalogue.core.data.repository.CatalogueRepository
 import com.chinmay.catalogue.core.data.repository.EnquiryRepository
 import com.chinmay.catalogue.core.model.DataError
@@ -35,11 +36,15 @@ class EnquiryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val catalogue: CatalogueRepository,
     private val enquiries: EnquiryRepository,
+    auth: AuthRepository,
 ) : ViewModel() {
 
     private val productId: String = checkNotNull(savedStateHandle["productId"]) { "EnquiryDestination.productId is required" }
 
-    private val _uiState = MutableStateFlow(EnquiryUiState())
+    // Signed in: name, email and phone come from the account, so the customer only checks them.
+    private val _uiState = MutableStateFlow(
+        EnquiryUiState(form = auth.currentUser.value?.let { EnquiryForm(name = it.fullName, email = it.email, phone = it.phone.orEmpty()) } ?: EnquiryForm()),
+    )
     val uiState: StateFlow<EnquiryUiState> = _uiState.asStateFlow()
 
     init {

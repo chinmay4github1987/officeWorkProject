@@ -20,4 +20,6 @@
     <string name="feature_enquiry_reference">Reference %1$s</string>
     <string name="feature_enquiry_back_to_product">Back to product</string>
     <string name="feature_enquiry_continue">Continue browsing</string>
+    <string name="feature_enquiry_this_product">this product</string>
+    <string name="feature_enquiry_counter">%1$d / %2$d</string>
 </resources>

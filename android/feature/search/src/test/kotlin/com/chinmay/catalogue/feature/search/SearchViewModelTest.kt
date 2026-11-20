@@ -17,7 +17,7 @@ class SearchViewModelTest {
     private val viewModel by lazy { SearchViewModel(SavedStateHandle(), repository) }
 
     @Test
-    fun `typing does not search; tapping Search does`() {
+    fun `typing does not search, tapping Search does`() {
         viewModel.onQueryChange("ssd")
         assertEquals(SearchResults.Idle, viewModel.uiState.value.results)
         assertTrue(repository.searchTerms.isEmpty())

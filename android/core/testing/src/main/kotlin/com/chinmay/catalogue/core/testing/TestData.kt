@@ -6,8 +6,12 @@ import com.chinmay.catalogue.core.model.CategoryPage
 import com.chinmay.catalogue.core.model.Money
 import com.chinmay.catalogue.core.model.Product
 import com.chinmay.catalogue.core.model.Rating
+import com.chinmay.catalogue.core.model.User
 
 object TestData {
+    val user = User(id = "1", username = "asha", email = "asha@example.com", firstName = "Asha", lastName = "Rao", phone = "+91 98765 43210")
+    const val PASSWORD = "secret-pass"
+
     val electronics = Category("electronics", "Electronics")
     val mens = Category("mens-clothing", "Men's clothing")
 

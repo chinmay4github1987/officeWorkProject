@@ -20,8 +20,14 @@ sealed interface DataError {
     /** The server rejected the input. Keys are field names ("email"), values are messages to show. */
     data class Validation(val fields: Map<String, String>) : DataError
 
-    /** Too many requests (the enquiry endpoint is rate limited). */
+    /** Too many requests (enquiries and logins are rate limited). */
     data object RateLimited : DataError
+
+    /** Login failed: the username and password don't match. */
+    data object InvalidCredentials : DataError
+
+    /** The session is missing or expired. The app has already signed out; the screen should offer sign-in. */
+    data object Unauthorized : DataError
 
     /** Anything else. [message] is safe to show when present. */
     data class Server(val message: String?) : DataError

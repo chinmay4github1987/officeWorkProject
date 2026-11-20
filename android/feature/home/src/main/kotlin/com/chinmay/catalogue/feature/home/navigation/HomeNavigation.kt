@@ -18,8 +18,16 @@ fun NavGraphBuilder.homeScreen(
     onSearchClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onCategoryClick: (Category) -> Unit,
+    onCartClick: () -> Unit,
+    onSignInClick: () -> Unit,
 ) {
     composable<HomeDestination> {
-        HomeRoute(onSearchClick = onSearchClick, onProductClick = onProductClick, onCategoryClick = onCategoryClick)
+        HomeRoute(
+            onSearchClick = onSearchClick,
+            onProductClick = onProductClick,
+            onCategoryClick = onCategoryClick,
+            onCartClick = onCartClick,
+            onSignInClick = onSignInClick,
+        )
     }
 }
