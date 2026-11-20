@@ -1,0 +1,6 @@
+<resources>
+    <!-- Only the window before Compose draws. Everything else is themed in :core:designsystem. -->
+    <style name="Theme.Catalogue" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+</resources>

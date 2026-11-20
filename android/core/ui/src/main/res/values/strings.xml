@@ -1,0 +1,11 @@
+<resources>
+    <string name="core_ui_error_network_title">You\'re offline</string>
+    <string name="core_ui_error_network_message">Check your connection, then try again.</string>
+    <string name="core_ui_error_not_found_title">Not found</string>
+    <string name="core_ui_error_not_found_message">This item is no longer available.</string>
+    <string name="core_ui_error_rate_limited_title">Too many requests</string>
+    <string name="core_ui_error_rate_limited_message">Please wait a minute, then try again.</string>
+    <string name="core_ui_error_generic_title">Something went wrong</string>
+    <string name="core_ui_error_generic_message">Please try again in a moment.</string>
+    <string name="core_ui_retry">Try again</string>
+</resources>

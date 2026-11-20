@@ -1,0 +1,15 @@
+<resources>
+    <string name="feature_search_back">Back</string>
+    <string name="feature_search_label">Search products</string>
+    <string name="feature_search_button">Search</string>
+    <string name="feature_search_clear">Clear search</string>
+    <string name="feature_search_required">Enter a search term</string>
+    <string name="feature_search_idle_title">Find a product</string>
+    <string name="feature_search_idle_message">Search by name, description or category, then tap Search.</string>
+    <string name="feature_search_empty_title">No matches for “%1$s”</string>
+    <string name="feature_search_empty_message">Check the spelling, or try a broader word like “shirt” or “drive”.</string>
+    <plurals name="feature_search_results">
+        <item quantity="one">%1$d result for “%2$s”</item>
+        <item quantity="other">%1$d results for “%2$s”</item>
+    </plurals>
+</resources>
