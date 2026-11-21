@@ -15,6 +15,13 @@ android {
         versionName = "0.1.0"
     }
 
+    packaging {
+        resources {
+            // JavaMail (android-mail, android-activation) and jakarta.inject each ship these files under the same path.
+            excludes += setOf("META-INF/NOTICE.md", "META-INF/LICENSE.md")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true

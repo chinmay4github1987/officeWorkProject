@@ -14,6 +14,8 @@ coroutines = "1.9.0"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 coil = "3.0.4"
+# JavaMail for Android (open source, EPL-2.0 / GPL-2.0 with Classpath Exception). Sends enquiry emails over SMTP.
+javamail = "1.6.7"
 junit = "4.13.2"
 
 [libraries]
@@ -50,6 +52,8 @@ okhttp-core = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+android-mail = { group = "com.sun.mail", name = "android-mail", version.ref = "javamail" }
+android-activation = { group = "com.sun.mail", name = "android-activation", version.ref = "javamail" }
 
 # Images
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }

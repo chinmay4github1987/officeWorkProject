@@ -5,6 +5,8 @@ import com.chinmay.catalogue.core.network.CatalogueApi
 import com.chinmay.catalogue.core.network.AuthInterceptor
 import com.chinmay.catalogue.core.network.NetworkFactory
 import com.chinmay.catalogue.core.network.SessionTokenProvider
+import com.chinmay.catalogue.core.network.mail.SmtpConfig
+import com.chinmay.catalogue.core.network.mail.SmtpMailer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,4 +44,21 @@ object NetworkModule {
     @Singleton
     fun provideCatalogueApi(client: OkHttpClient, json: Json): CatalogueApi =
         NetworkFactory.catalogueApi(BuildConfig.API_BASE_URL, client, json)
+
+    /** Empty unless the build was given catalogue.smtp.* properties (see android/gradle.properties). */
+    @Provides
+    @Singleton
+    fun provideSmtpConfig(): SmtpConfig = SmtpConfig(
+        host = BuildConfig.SMTP_HOST,
+        port = BuildConfig.SMTP_PORT,
+        security = SmtpConfig.security(BuildConfig.SMTP_SECURITY),
+        username = BuildConfig.SMTP_USERNAME,
+        password = BuildConfig.SMTP_PASSWORD,
+        from = BuildConfig.SMTP_FROM,
+        salesInbox = BuildConfig.SALES_INBOX,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSmtpMailer(config: SmtpConfig): SmtpMailer = SmtpMailer(config)
 }
