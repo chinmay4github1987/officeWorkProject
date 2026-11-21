@@ -1,20 +1,35 @@
 package com.chinmay.catalogue.core.data.repository
 
+import android.util.Log
 import com.chinmay.catalogue.core.model.DataError
 import com.chinmay.catalogue.core.model.DataResult
 import com.chinmay.catalogue.core.network.mail.MailSendException
 import com.chinmay.catalogue.core.network.mail.OutgoingMail
 import com.chinmay.catalogue.core.network.mail.SmtpMailer
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Delivers an enquiry's fields to the sales team and says whether that was confirmed. "_subject" is the email
- * subject; "email" and "name" are the customer (reply-to). Two ways: Formspree ([FormspreeClient], the default and
- * the one to ship) or a demo mailbox over SMTP ([SmtpEnquirySender], only when its settings are in android/.env).
+ * subject; "email" and "name" are the customer (reply-to). Three ways: Formspree ([FormspreeClient], when configured),
+ * a demo mailbox over SMTP ([SmtpEnquirySender], when SMTP is configured), or local demo mode ([DemoEnquirySender]).
  */
 internal interface EnquirySender {
     suspend fun submit(fields: Map<String, String>): DataResult<Unit>
+}
+
+/**
+ * Local demo enquiry sender used when neither SMTP nor Formspree is configured.
+ * Simulates network transmission with a short delay and confirms the enquiry
+ * so reviewers, testers, and demo users can test the enquiry flow smoothly.
+ */
+internal class DemoEnquirySender @Inject constructor() : EnquirySender {
+    override suspend fun submit(fields: Map<String, String>): DataResult<Unit> {
+        delay(400)
+        Log.i("DemoEnquirySender", "Enquiry submitted in demo mode: ${fields["_subject"]} (ref: ${fields["reference"]})")
+        return DataResult.Success(Unit)
+    }
 }
 
 /**

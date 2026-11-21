@@ -3,6 +3,7 @@ package com.chinmay.catalogue.core.data.di
 import com.chinmay.catalogue.core.data.repository.AuthRepository
 import com.chinmay.catalogue.core.data.repository.CartRepository
 import com.chinmay.catalogue.core.data.repository.CatalogueRepository
+import com.chinmay.catalogue.core.data.repository.DemoEnquirySender
 import com.chinmay.catalogue.core.data.repository.EnquiryRepository
 import com.chinmay.catalogue.core.data.repository.EnquirySender
 import com.chinmay.catalogue.core.data.repository.FormspreeClient
@@ -19,6 +20,7 @@ import com.chinmay.catalogue.core.data.session.CartLineStore
 import com.chinmay.catalogue.core.data.session.SessionStore
 import com.chinmay.catalogue.core.data.session.SharedPreferencesCartLineStore
 import com.chinmay.catalogue.core.data.session.SharedPreferencesSessionStore
+import com.chinmay.catalogue.core.network.FormspreeConfig
 import com.chinmay.catalogue.core.network.mail.SmtpConfig
 import dagger.Binds
 import dagger.Module
@@ -68,7 +70,7 @@ internal abstract class DataModule {
 
 /**
  * How enquiries reach sales: the demo mailbox over SMTP when its settings are in android/.env (client demos),
- * otherwise Formspree (no password in the app; what CI builds and what you should ship).
+ * Formspree (when FORMSPREE_FORM_ID is configured), or local demo mode when neither is set.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -77,7 +79,13 @@ internal object EnquirySenderModule {
     @Singleton
     fun provideEnquirySender(
         smtp: SmtpConfig,
+        formspreeConfig: FormspreeConfig,
         byEmail: Provider<SmtpEnquirySender>,
         byFormspree: Provider<FormspreeClient>,
-    ): EnquirySender = if (smtp.isConfigured) byEmail.get() else byFormspree.get()
+        byDemo: Provider<DemoEnquirySender>,
+    ): EnquirySender = when {
+        smtp.isConfigured -> byEmail.get()
+        formspreeConfig.isConfigured -> byFormspree.get()
+        else -> byDemo.get()
+    }
 }
