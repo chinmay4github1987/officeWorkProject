@@ -45,6 +45,9 @@ jobs:
       # Caches Gradle and checks gradle-wrapper.jar against Gradle's published checksums.
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Strip Windows-specific local java home if present
+        run: sed -i '/org.gradle.java.home/d' gradle.properties || true
+
       # testDebugUnitTest covers the Android modules (including the Robolectric UI tests);
       # core:model is plain Kotlin, so its task is just `test`.
       - name: Unit and UI tests

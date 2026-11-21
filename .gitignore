@@ -1,0 +1,47 @@
+# Secrets and local config
+.env
+*.env
+local.properties
+**/local.properties
+
+# Excluded folders requested
+backend/
+**/backend/
+docs/
+**/docs/
+doc/
+**/doc/
+.claude/
+**/.claude/
+CLAUDE.md
+
+# Windows / Installer / Temp files
+*.ms
+**/*.ms
+*.msi
+**/*.msi
+
+# Node
+node_modules/
+**/node_modules/
+backend/dist/
+coverage/
+*.log
+
+# Android / Gradle
+.gradle/
+**/.gradle/
+build/
+**/build/
+.kotlin/
+**/.kotlin/
+*.iml
+.idea/
+**/.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# OS
+.DS_Store
+Thumbs.db
