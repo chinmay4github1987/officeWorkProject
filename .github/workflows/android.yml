@@ -1,0 +1,123 @@
+# Android: run the unit tests, then build the debug and release APKs and keep them as downloads.
+#
+#   Pull request / push to main -> tests + APKs attached to the run (Actions tab -> run -> Artifacts).
+#   Tag v*  (git tag v0.2.0 && git push origin v0.2.0) -> same, plus a GitHub Release with both APKs.
+#   Run workflow button -> same as a push, and you can point the app at a different backend.
+#
+# The APK talks to OUR backend, never to Fake Store. Its URL is baked in at build time from
+# catalogue.apiBaseUrl (android/gradle.properties). The default, http://10.0.2.2:3000/, only works on an
+# emulator whose host machine is running the backend. For a phone, run the workflow by hand and give the
+# deployed backend's https:// URL (plain http is only allowed for 10.0.2.2, see network_security_config.xml).
+name: Android
+
+on:
+  pull_request:
+    paths: ['android/**', '.github/workflows/android.yml']
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/android.yml']
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: 'Backend URL baked into the APK (must end with /). Empty = gradle.properties default (emulator only).'
+        required: false
+        default: ''
+
+# A newer push to the same branch cancels the older, now pointless, build.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Caches Gradle and checks gradle-wrapper.jar against Gradle's published checksums.
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Choose the backend URL
+        id: api
+        env:
+          # Passed through env, never pasted into the script, so the input can't inject shell commands.
+          INPUT_URL: ${{ inputs.api_base_url }}
+        run: |
+          if [ -z "$INPUT_URL" ]; then
+            echo "Using the default from gradle.properties"
+            echo "args=" >> "$GITHUB_OUTPUT"
+          elif [[ "$INPUT_URL" =~ ^https?://[A-Za-z0-9.:-]+(/[A-Za-z0-9._~/-]*)?/$ ]]; then
+            echo "Using $INPUT_URL"
+            echo "args=-Pcatalogue.apiBaseUrl=$INPUT_URL" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::api_base_url must look like https://api.example.com/ (and end with /)"
+            exit 1
+          fi
+
+      # testDebugUnitTest covers the Android modules; core:model is plain Kotlin, so its task is just `test`.
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest :core:model:test ${{ steps.api.outputs.args }}
+
+      - name: Build APKs
+        run: ./gradlew :app:assembleDebug :app:assembleRelease ${{ steps.api.outputs.args }}
+
+      - name: Name the APKs after the commit
+        id: apk
+        run: |
+          version="${GITHUB_REF_NAME//\//-}-${GITHUB_SHA::7}"
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/catalogue-$version-debug.apk"
+          cp app/build/outputs/apk/release/app-release.apk "dist/catalogue-$version-release.apk"
+          ls -l dist
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: catalogue-apk-${{ steps.apk.outputs.version }}
+          path: android/dist/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Keep the test reports when tests fail
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: android/**/build/reports/tests/
+          retention-days: 7
+
+  release:
+    # Only for version tags, and only after the build (and its tests) passed.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: catalogue-apk-*
+          merge-multiple: true
+          path: dist
+
+      - name: Publish a GitHub Release with the APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
