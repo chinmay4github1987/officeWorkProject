@@ -4,6 +4,9 @@
 #   Tag v*  (git tag v0.2.0 && git push origin v0.2.0) -> same, plus a GitHub Release with both APKs.
 #   Run workflow button -> same as a push, and you can point the app at a different backend.
 #
+# Enquiry email from the app: the APK build reads SMTP_HOST, SMTP_PORT, SMTP_SECURITY, SMTP_USERNAME,
+# SMTP_PASSWORD, SMTP_FROM and SALES_INBOX from the repository's Actions secrets (see android/.env.example).
+#
 # The APK talks to OUR backend, never to Fake Store. Its URL is baked in at build time from
 # catalogue.apiBaseUrl (android/gradle.properties). The default, http://10.0.2.2:3000/, only works on an
 # emulator whose host machine is running the backend. For a phone, run the workflow by hand and give the
@@ -71,8 +74,32 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest :core:model:test ${{ steps.api.outputs.args }}
 
+      # SMTP settings for emailing enquiries from the app come from the repository's Actions secrets
+      # (Settings -> Secrets and variables -> Actions), the same names as android/.env.example.
+      # A missing secret is just empty: with no SMTP_HOST the APK sends enquiries through the backend instead.
+      # Warning: the values are built into the APKs, and this repo's artifacts and releases are downloadable.
       - name: Build APKs
-        run: ./gradlew :app:assembleDebug :app:assembleRelease ${{ steps.api.outputs.args }}
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURITY: ${{ secrets.SMTP_SECURITY }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          SALES_INBOX: ${{ secrets.SALES_INBOX }}
+        run: |
+          # Empty secrets must not override the build's defaults (an empty SMTP_PORT isn't a number).
+          for name in SMTP_HOST SMTP_PORT SMTP_SECURITY SMTP_USERNAME SMTP_PASSWORD SMTP_FROM SALES_INBOX; do
+            [ -z "${!name}" ] && unset "$name"
+          done
+          if [ -n "${SMTP_HOST:-}" ] && [ -n "${SALES_INBOX:-}" ]; then
+            # Only says whether each value exists; never prints one.
+            password_state="missing"; [ -n "${SMTP_PASSWORD:-}" ] && password_state="present"
+            echo "Enquiry email: ON (sent from the app over SMTP; password secret $password_state)"
+          else
+            echo "Enquiry email: OFF (add SMTP_HOST and SALES_INBOX secrets to turn it on); enquiries go through the backend"
+          fi
+          ./gradlew :app:assembleDebug :app:assembleRelease ${{ steps.api.outputs.args }}
 
       - name: Name the APKs after the commit
         id: apk
