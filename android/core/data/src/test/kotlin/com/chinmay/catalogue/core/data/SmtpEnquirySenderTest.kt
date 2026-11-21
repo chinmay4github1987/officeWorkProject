@@ -1,5 +1,6 @@
 package com.chinmay.catalogue.core.data
 
+import com.chinmay.catalogue.core.data.repository.EMAIL_LOGIN_REJECTED
 import com.chinmay.catalogue.core.data.repository.SmtpEnquirySender
 import com.chinmay.catalogue.core.model.DataError
 import com.chinmay.catalogue.core.model.DataResult
@@ -22,7 +23,7 @@ import kotlin.concurrent.thread
 class SmtpEnquirySenderTest {
 
     /** Speaks just enough SMTP (with AUTH) for JavaMail, and records each delivered message. */
-    private class FakeSmtpServer : AutoCloseable {
+    private class FakeSmtpServer(private val rejectLogin: Boolean = false) : AutoCloseable {
         class Delivery(val recipients: List<String>, val data: String)
 
         private val socket = ServerSocket(0)
@@ -47,7 +48,8 @@ class SmtpEnquirySenderTest {
                 val command = line.uppercase()
                 when {
                     command.startsWith("EHLO") -> { output.print("250-fake\r\n250 AUTH PLAIN LOGIN\r\n"); output.flush() }
-                    command.startsWith("AUTH") -> reply("235 Authentication successful")
+                    command.startsWith("AUTH") ->
+                        if (rejectLogin) reply("535 5.7.8 Username and Password not accepted") else reply("235 Authentication successful")
                     command.startsWith("MAIL FROM") -> reply("250 OK")
                     command.startsWith("RCPT TO") -> reply("250 OK").also { recipients += line.substringAfter(':').trim() }
                     command == "DATA" -> {
@@ -123,4 +125,14 @@ class SmtpEnquirySenderTest {
         assertEquals(DataResult.Failure(DataError.Network), SmtpEnquirySender(SmtpMailer(config(closedPort))).submit(fields))
     }
 
+
+    @Test
+    fun `a rejected mailbox login says so instead of a vague error`() = runTest {
+        FakeSmtpServer(rejectLogin = true).use { gmailLike ->
+            val result = SmtpEnquirySender(SmtpMailer(config(gmailLike.port))).submit(fields)
+
+            assertEquals(DataResult.Failure(DataError.Server(EMAIL_LOGIN_REJECTED)), result)
+            assertTrue(gmailLike.deliveries.isEmpty())
+        }
+    }
 }

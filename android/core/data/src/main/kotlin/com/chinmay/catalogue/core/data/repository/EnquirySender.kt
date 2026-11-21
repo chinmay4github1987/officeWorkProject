@@ -15,6 +15,10 @@ import kotlin.coroutines.cancellation.CancellationException
  * subject; "email" and "name" are the customer (reply-to). Three ways: Formspree ([FormspreeClient], when configured),
  * a demo mailbox over SMTP ([SmtpEnquirySender], when SMTP is configured), or local demo mode ([DemoEnquirySender]).
  */
+/** Shown when the demo mailbox refuses the app's login (for Gmail: use an App Password, not the account password). */
+internal const val EMAIL_LOGIN_REJECTED =
+    "The app's email account couldn't sign in, so your enquiry wasn't sent. Please try again later."
+
 internal interface EnquirySender {
     suspend fun submit(fields: Map<String, String>): DataResult<Unit>
 }
@@ -44,7 +48,14 @@ internal class SmtpEnquirySender @Inject constructor(private val mailer: SmtpMai
     } catch (e: CancellationException) {
         throw e
     } catch (e: MailSendException) {
-        DataResult.Failure(if (e.isConnectionProblem) DataError.Network else DataError.Server(message = null))
+        DataResult.Failure(
+            when {
+                e.isConnectionProblem -> DataError.Network
+                // Shown on the form, so a demo with a wrong mailbox password is obvious instead of "Something went wrong".
+                e.isLoginRejected -> DataError.Server(EMAIL_LOGIN_REJECTED)
+                else -> DataError.Server(message = null)
+            },
+        )
     }
 
     internal companion object {

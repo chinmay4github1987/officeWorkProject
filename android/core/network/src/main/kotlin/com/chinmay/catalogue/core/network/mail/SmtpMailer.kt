@@ -54,8 +54,15 @@ data class OutgoingMail(
     val replyToName: String,
 )
 
-/** Sending failed. [isConnectionProblem] = the server couldn't be reached (retrying later may work). */
-class MailSendException(val isConnectionProblem: Boolean, cause: Throwable) : IOException(cause.javaClass.simpleName, cause)
+/**
+ * Sending failed. [isConnectionProblem] = the server couldn't be reached (retrying later may work);
+ * [isLoginRejected] = the mailbox refused the username/password (for Gmail: an App Password is required).
+ */
+class MailSendException(
+    val isConnectionProblem: Boolean,
+    cause: Throwable,
+    val isLoginRejected: Boolean = false,
+) : IOException(cause.javaClass.simpleName, cause)
 
 /**
  * Sends email over SMTP with JavaMail for Android (com.sun.mail:android-mail), from and to the configured mailbox.
@@ -76,7 +83,7 @@ class SmtpMailer(private val config: SmtpConfig) {
             Transport.send(message, config.username, config.password)
         } catch (e: AuthenticationFailedException) {
             logFailure(e)
-            throw MailSendException(isConnectionProblem = false, e)
+            throw MailSendException(isConnectionProblem = false, e, isLoginRejected = true)
         } catch (e: MessagingException) {
             logFailure(e)
             // JavaMail wraps socket errors (refused, timeout, unknown host, TLS) in a MessagingException.
