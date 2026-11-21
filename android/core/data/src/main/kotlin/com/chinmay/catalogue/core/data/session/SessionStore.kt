@@ -2,7 +2,6 @@ package com.chinmay.catalogue.core.data.session
 
 import android.content.Context
 import com.chinmay.catalogue.core.model.User
-import com.chinmay.catalogue.core.network.SessionTokenProvider
 import com.chinmay.catalogue.core.network.dto.UserDto
 import com.chinmay.catalogue.core.network.dto.asExternalModel
 import com.chinmay.catalogue.core.network.dto.asNetworkModel
@@ -14,16 +13,17 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** The one place that knows whether someone is signed in. Also feeds the token to :core:network. */
-internal interface SessionStore : SessionTokenProvider {
+/** The one place that knows whether someone is signed in. */
+internal interface SessionStore {
     val user: StateFlow<User?>
+    fun token(): String?
     fun save(token: String, user: User)
     fun clear()
 }
 
 /**
  * Keeps the session in app-private SharedPreferences so sign-in survives restarts.
- * The token is an opaque, expiring session token from our backend (never a password), and the app
+ * The token is Fake Store's login token (never a password); it is kept but never sent anywhere. The app
  * has `allowBackup="false"`, so it doesn't leave the device. Read once at startup, then served from memory.
  */
 @Singleton

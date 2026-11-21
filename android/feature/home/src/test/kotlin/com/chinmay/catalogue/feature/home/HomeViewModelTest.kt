@@ -62,7 +62,7 @@ class HomeViewModelTest {
         carts.add("3", 2)
         assertEquals(HomeAccount(TestData.user, cartCount = 2), viewModel.account.value)
 
-        viewModel.signOut()
+        auth.logout() // signing out now lives in the side drawer
         assertEquals(HomeAccount(), viewModel.account.value)
     }
 }

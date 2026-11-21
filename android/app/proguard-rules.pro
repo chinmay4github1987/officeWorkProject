@@ -7,8 +7,8 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# JavaMail for Android loads its SMTP transport and content handlers by class name, from META-INF/javamail.*
-# and META-INF/mailcap. R8 can't see those lookups, so keep the library's classes as they are.
+# JavaMail for Android (optional demo email) loads its SMTP transport and content handlers by class name, from
+# META-INF/javamail.* and META-INF/mailcap. R8 can't see those lookups, so keep the library's classes as they are.
 -keep class javax.mail.** { *; }
 -keep class javax.activation.** { *; }
 -keep class com.sun.mail.** { *; }

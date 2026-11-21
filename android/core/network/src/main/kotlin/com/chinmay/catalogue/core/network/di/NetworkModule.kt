@@ -1,10 +1,11 @@
 package com.chinmay.catalogue.core.network.di
 
 import com.chinmay.catalogue.core.network.BuildConfig
-import com.chinmay.catalogue.core.network.CatalogueApi
-import com.chinmay.catalogue.core.network.AuthInterceptor
+import com.chinmay.catalogue.core.network.FakeStoreApi
+import com.chinmay.catalogue.core.network.FormspreeApi
+import com.chinmay.catalogue.core.network.FormspreeConfig
 import com.chinmay.catalogue.core.network.NetworkFactory
-import com.chinmay.catalogue.core.network.SessionTokenProvider
+import com.chinmay.catalogue.core.network.dto.Pricing
 import com.chinmay.catalogue.core.network.mail.SmtpConfig
 import com.chinmay.catalogue.core.network.mail.SmtpMailer
 import dagger.Module
@@ -27,11 +28,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(tokens: SessionTokenProvider): OkHttpClient = OkHttpClient.Builder()
+    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
-        // Adds the session token while signed in (the BASIC debug log below never prints headers).
-        .addInterceptor(AuthInterceptor(tokens))
         .apply {
             // Request logging in debug builds only; release builds never log traffic (it contains customer details).
             if (BuildConfig.DEBUG) {
@@ -42,10 +41,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideCatalogueApi(client: OkHttpClient, json: Json): CatalogueApi =
-        NetworkFactory.catalogueApi(BuildConfig.API_BASE_URL, client, json)
+    fun provideFakeStoreApi(client: OkHttpClient, json: Json): FakeStoreApi =
+        NetworkFactory.fakeStoreApi(BuildConfig.FAKESTORE_BASE_URL, client, json)
 
-    /** Empty unless the build was given catalogue.smtp.* properties (see android/gradle.properties). */
+    @Provides
+    @Singleton
+    fun provideFormspreeApi(client: OkHttpClient, json: Json): FormspreeApi =
+        NetworkFactory.formspreeApi(NetworkFactory.FORMSPREE_BASE_URL, client, json)
+
+    /** The optional demo mailbox (Gmail by default). Unused unless SMTP_USERNAME and SMTP_PASSWORD are set in .env. */
     @Provides
     @Singleton
     fun provideSmtpConfig(): SmtpConfig = SmtpConfig(
@@ -54,11 +58,20 @@ object NetworkModule {
         security = SmtpConfig.security(BuildConfig.SMTP_SECURITY),
         username = BuildConfig.SMTP_USERNAME,
         password = BuildConfig.SMTP_PASSWORD,
-        from = BuildConfig.SMTP_FROM,
         salesInbox = BuildConfig.SALES_INBOX,
     )
 
     @Provides
     @Singleton
     fun provideSmtpMailer(config: SmtpConfig): SmtpMailer = SmtpMailer(config)
+
+    /** How Fake Store's dollar prices are shown: rupees at a fixed rate by default (PRICE_CURRENCY, PRICE_PER_USD). */
+    @Provides
+    @Singleton
+    fun providePricing(): Pricing = Pricing(currencyCode = BuildConfig.PRICE_CURRENCY, perUsd = BuildConfig.PRICE_PER_USD)
+
+    /** Blank unless the build was given FORMSPREE_FORM_ID (android/.env or a CI secret, see .env.example). */
+    @Provides
+    @Singleton
+    fun provideFormspreeConfig(): FormspreeConfig = FormspreeConfig(formId = BuildConfig.FORMSPREE_FORM_ID)
 }

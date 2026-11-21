@@ -3,54 +3,99 @@ package com.chinmay.catalogue.core.designsystem.theme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 /*
- * "Dark luxe" brand palette. Three rules keep it looking expensive rather than loud:
- *   1. One accent only: champagne gold, used for actions, prices and focus. Never for large areas.
- *   2. Warm neutrals: charcoal with a hint of brown and warm off-white text, never pure #000 / #FFF.
- *   3. Depth from tone, not shadow: each raised layer (background → card → field → pressed) is a step lighter.
- * The app is dark by default (see CatalogueTheme); the light scheme is the same brand on ivory.
+ * "Warm Coast" brand palette, after the reference shopping app: deep teal for words and the main action, soft mint
+ * for calm surfaces, and coral as the one warm accent (cart, highlights). Backgrounds are a warm off-white rather
+ * than pure white, which is gentler on the eyes; dark mode is a deep teal-navy, never pure black.
+ *   1. Teal (primary) carries text-weight things: titles, prices, the main button, selected chips.
+ *   2. Coral (secondary) marks "add" actions and small highlights; it only ever carries icons, never body text.
+ *   3. Pastel tiles (categories) and soft greys separate content instead of borders.
  *
- * Contrast (WCAG 2.2 AA needs 4.5:1 for text, 3:1 for icons and borders), for the pairs screens use:
- *   text #F4F1EA on #0E0E10 ≈ 17:1 · secondary text #A8A49C on card #18181B ≈ 7.0:1
- *   champagne #D6B57A on #0E0E10 ≈ 9.9:1 · button label #1C160A on champagne ≈ 9.3:1
- *   light scheme: #8A6512 on ivory #F7F4EE ≈ 5.1:1
+ * Contrast (WCAG 2.2 AA: 4.5:1 text, 3:1 icons/borders), for the pairs screens use:
+ *   light: ink #1B2A30 on #FAF8F5 ≈ 14:1 · muted #56676C on #FAF8F5 ≈ 5.6:1 · white on teal #1F4A5C ≈ 9.6:1
+ *          · teal on mint #D3F0E6 ≈ 8.0:1 · white icon on coral #E2614D ≈ 3.6:1
+ *   dark:  #E8F1EE on #0F1E24 ≈ 14:1 · muted #A6B8BC on card #172A31 ≈ 7.1:1 · #0B2A30 on mint #8FD9C4 ≈ 9.8:1
+ *          · dark icon #3B0E06 on coral #FF8A78 ≈ 7.5:1
  */
-private val Gold = Color(0xFFD6B57A) // champagne: muted, so it reads as premium rather than yellow
-private val Charcoal = Color(0xFF0E0E10)
+private val Teal = Color(0xFF1F4A5C)
+private val Mint = Color(0xFF8FD9C4)
+private val MintSoft = Color(0xFFD3F0E6)
+private val Coral = Color(0xFFE2614D)
+private val CoralDark = Color(0xFFFF8A78)
+private val WarmWhite = Color(0xFFFAF8F5)
+private val Ink = Color(0xFF1B2A30)
+private val Night = Color(0xFF0F1E24)
+
+internal val LightColors = lightColorScheme(
+    primary = Teal,
+    onPrimary = Color.White,
+    primaryContainer = MintSoft,
+    onPrimaryContainer = Color(0xFF0B3340),
+    inversePrimary = Mint,
+    secondary = Coral,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFFCE3DD),
+    onSecondaryContainer = Color(0xFF5C1D12),
+    tertiary = Color(0xFF2E7D6B),
+    onTertiary = Color.White,
+    tertiaryContainer = MintSoft,
+    onTertiaryContainer = Color(0xFF0B3340),
+    background = WarmWhite,
+    onBackground = Ink,
+    surface = WarmWhite,
+    onSurface = Ink,
+    surfaceVariant = Color(0xFFF1EEE9),
+    onSurfaceVariant = Color(0xFF56676C),
+    surfaceTint = Color.Transparent, // white cards stay white
+    inverseSurface = Ink,
+    inverseOnSurface = WarmWhite,
+    surfaceContainerLowest = Color.White, // cards
+    surfaceContainerLow = Color(0xFFF6F3EF),
+    surfaceContainer = Color(0xFFF1EEE9), // fields, chips
+    surfaceContainerHigh = Color(0xFFE9E5DF),
+    surfaceContainerHighest = Color(0xFFE1DCD5),
+    outline = Color(0xFFB9B3AA),
+    outlineVariant = Color(0xFFE6E1DA),
+    scrim = Color(0xFF000000),
+    error = Color(0xFFC62828),
+    onError = Color.White,
+    errorContainer = Color(0xFFFDE4E2),
+    onErrorContainer = Color(0xFF7A1F1A),
+)
 
 internal val DarkColors = darkColorScheme(
-    primary = Gold,
-    onPrimary = Color(0xFF1C160A),
-    primaryContainer = Color(0xFF2E281D),
-    onPrimaryContainer = Color(0xFFF2E3C4),
-    inversePrimary = Color(0xFF8A6512),
-    secondary = Color(0xFFCFC6B4),
-    onSecondary = Color(0xFF1F1B12),
-    secondaryContainer = Color(0xFF2A2720),
-    onSecondaryContainer = Color(0xFFEDE4D0),
-    tertiary = Color(0xFF9FD3C7),
-    onTertiary = Color(0xFF0B2A24),
-    tertiaryContainer = Color(0xFF1C3530),
-    onTertiaryContainer = Color(0xFFCDEDE5),
-    background = Charcoal,
-    onBackground = Color(0xFFF4F1EA),
-    surface = Charcoal,
-    onSurface = Color(0xFFF4F1EA),
-    surfaceVariant = Color(0xFF232326),
-    onSurfaceVariant = Color(0xFFA8A49C),
-    surfaceTint = Gold,
-    inverseSurface = Color(0xFFF4F1EA),
-    inverseOnSurface = Color(0xFF1B1B20),
-    // Cards and bars use the "lowest" slot, so here it is a raised charcoal that lifts content off the background.
-    surfaceContainerLowest = Color(0xFF18181B),
-    surfaceContainerLow = Color(0xFF141416),
-    surfaceContainer = Color(0xFF1C1C1F),
-    surfaceContainerHigh = Color(0xFF232326),
-    surfaceContainerHighest = Color(0xFF2C2C30),
-    outline = Color(0xFF3F3D39),
-    outlineVariant = Color(0xFF2A2927),
+    primary = Mint,
+    onPrimary = Color(0xFF0B2A30),
+    primaryContainer = Teal,
+    onPrimaryContainer = MintSoft,
+    inversePrimary = Teal,
+    secondary = CoralDark,
+    onSecondary = Color(0xFF3B0E06),
+    secondaryContainer = Color(0xFF5A2A22),
+    onSecondaryContainer = Color(0xFFFFDAD2),
+    tertiary = Mint,
+    onTertiary = Color(0xFF0B2A30),
+    tertiaryContainer = Color(0xFF1E3F3A),
+    onTertiaryContainer = MintSoft,
+    background = Night,
+    onBackground = Color(0xFFE8F1EE),
+    surface = Night,
+    onSurface = Color(0xFFE8F1EE),
+    surfaceVariant = Color(0xFF1C3139),
+    onSurfaceVariant = Color(0xFFA6B8BC),
+    surfaceTint = Color.Transparent,
+    inverseSurface = Color(0xFFE8F1EE),
+    inverseOnSurface = Night,
+    surfaceContainerLowest = Color(0xFF172A31), // cards
+    surfaceContainerLow = Color(0xFF14262C),
+    surfaceContainer = Color(0xFF1C3139), // fields, chips
+    surfaceContainerHigh = Color(0xFF223A43),
+    surfaceContainerHighest = Color(0xFF2A444E),
+    outline = Color(0xFF5E7880),
+    outlineVariant = Color(0xFF2A3F47),
     scrim = Color(0xFF000000),
     error = Color(0xFFFF8A80),
     onError = Color(0xFF3B0907),
@@ -58,69 +103,54 @@ internal val DarkColors = darkColorScheme(
     onErrorContainer = Color(0xFFFFDAD6),
 )
 
-internal val LightColors = lightColorScheme(
-    primary = Color(0xFF8A6512),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFF6DFA8),
-    onPrimaryContainer = Color(0xFF2B1F02),
-    secondary = Color(0xFF5E584B),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFEDE4D0),
-    onSecondaryContainer = Color(0xFF1F1B12),
-    tertiary = Color(0xFF2E6B5F),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFCDEDE5),
-    onTertiaryContainer = Color(0xFF0B2A24),
-    background = Color(0xFFF7F4EE),
-    onBackground = Color(0xFF16161A),
-    surface = Color(0xFFF7F4EE),
-    onSurface = Color(0xFF16161A),
-    surfaceVariant = Color(0xFFEAE5DA),
-    onSurfaceVariant = Color(0xFF5C5A55),
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFFBF9F5),
-    surfaceContainer = Color(0xFFF1EDE5),
-    surfaceContainerHigh = Color(0xFFEAE5DA),
-    surfaceContainerHighest = Color(0xFFE3DDD0),
-    outline = Color(0xFFCBC4B6),
-    outlineVariant = Color(0xFFE4DED2),
-    error = Color(0xFFBA1A1A),
-    onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
-)
-
 /** Brand colours Material's scheme has no slot for. */
 @Immutable
 data class CatalogueExtendedColors(
     val ratingStar: Color,
-    /** Fake Store photos have white backgrounds, so images always sit on a light tile, even in dark mode. */
+    /**
+     * The tile behind every product photo. Fake Store photos have white backgrounds, so ProductImage multiplies them
+     * with this colour: the white becomes the tile and the product looks cut out. It stays light in dark mode too,
+     * because darkening the photo would muddy the product.
+     */
     val productImageBackground: Color,
-    /** Soft tints for category cards: (container, content) pairs, cycled by index. */
+    /** The home hero banner and category banners: a soft mint wash. */
+    val heroGradient: Brush,
+    /** Old price, struck through, next to a sale price. */
+    val strikePrice: Color,
+    /** Pastel tiles for categories: (container, content) pairs, cycled by index. */
     val categoryAccents: List<Pair<Color, Color>>,
-)
-
-internal val DarkExtendedColors = CatalogueExtendedColors(
-    ratingStar = Gold,
-    productImageBackground = Color(0xFFFFFFFF),
-    // Deep jewel tones with light text: they read as "luxe" on charcoal without shouting.
-    categoryAccents = listOf(
-        Color(0xFF2E2614) to Color(0xFFF3D9A0),
-        Color(0xFF16302B) to Color(0xFFA8E0D5),
-        Color(0xFF301A26) to Color(0xFFF0B8D0),
-        Color(0xFF1A2236) to Color(0xFFB8C8F0),
-        Color(0xFF30211A) to Color(0xFFF0C4A8),
-    ),
+    val dividerSubtle: Color,
+    val overlayScrim: Color,
 )
 
 internal val LightExtendedColors = CatalogueExtendedColors(
-    ratingStar = Color(0xFFC8901E),
-    productImageBackground = Color(0xFFFFFFFF),
+    ratingStar = Color(0xFFF5A524),
+    productImageBackground = Color(0xFFF3F0EB),
+    heroGradient = Brush.linearGradient(listOf(Color(0xFFDDF4EC), Color(0xFFBEE9DD))),
+    strikePrice = Color(0xFFC62828),
     categoryAccents = listOf(
-        Color(0xFFF6E7C4) to Color(0xFF4A3608),
-        Color(0xFFD9F0EA) to Color(0xFF14453B),
-        Color(0xFFF6DDE8) to Color(0xFF5C1F3A),
-        Color(0xFFDDE5F6) to Color(0xFF1E2E55),
-        Color(0xFFF6E1D6) to Color(0xFF5C2F14),
+        MintSoft to Color(0xFF0B3340),
+        Color(0xFFFBDCD3) to Color(0xFF5C2418),
+        Color(0xFFF6ECD6) to Color(0xFF4D3A12),
+        Color(0xFFDCE9F5) to Color(0xFF173A5C),
+        Color(0xFFE9E1F4) to Color(0xFF3A2457),
     ),
+    dividerSubtle = Color(0xFFEFEBE6),
+    overlayScrim = Color(0x00FAF8F5),
+)
+
+internal val DarkExtendedColors = CatalogueExtendedColors(
+    ratingStar = Color(0xFFFFC145),
+    productImageBackground = Color(0xFFE9E6E1),
+    heroGradient = Brush.linearGradient(listOf(Color(0xFF1C3B44), Color(0xFF143038))),
+    strikePrice = Color(0xFFFF8A80),
+    categoryAccents = listOf(
+        Color(0xFF1E3F3A) to Color(0xFFBFEBDD),
+        Color(0xFF4A2A24) to Color(0xFFFBD3C9),
+        Color(0xFF43391F) to Color(0xFFF3E2BC),
+        Color(0xFF1E3347) to Color(0xFFCFE1F5),
+        Color(0xFF33284A) to Color(0xFFE2D6F5),
+    ),
+    dividerSubtle = Color(0xFF1E3139),
+    overlayScrim = Color(0x000F1E24),
 )

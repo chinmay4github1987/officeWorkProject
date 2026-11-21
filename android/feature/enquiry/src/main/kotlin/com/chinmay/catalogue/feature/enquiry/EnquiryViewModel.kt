@@ -27,7 +27,7 @@ data class EnquiryUiState(
     val isSubmitting: Boolean = false,
     /** A failure that isn't about one field (offline, server down). Shown as a banner; the form keeps its values. */
     val submitError: DataError? = null,
-    /** Set once the backend confirms the email was sent: the screen switches to "Thank you". */
+    /** Set once the email has been sent: the screen switches to "Thank you". */
     val receipt: EnquiryReceipt? = null,
 )
 
@@ -77,8 +77,9 @@ class EnquiryViewModel @Inject constructor(
                 productId = productId,
                 name = form.name.trim(),
                 email = form.email.trim(),
-                phone = form.phone.trim().ifEmpty { null },
-                message = form.message.trim().ifEmpty { null },
+                phone = form.phone.trim(),
+                message = form.message.trim(),
+                company = form.company.trim().ifEmpty { null },
             )
             when (val result = enquiries.submit(request)) {
                 is DataResult.Success -> _uiState.update { it.copy(isSubmitting = false, receipt = result.data) }

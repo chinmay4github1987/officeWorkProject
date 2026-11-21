@@ -8,4 +8,24 @@
     <string name="feature_product_view_cart">View cart</string>
     <string name="feature_product_add_failed">Couldn\'t add to cart. Please try again.</string>
     <string name="feature_product_enquire_hint">Our sales team usually replies within one working day.</string>
+    <string name="feature_product_features">Features</string>
+    <string name="feature_product_specifications">Specifications</string>
+    <string name="feature_product_related">Customers also viewed</string>
+    <string name="feature_product_rating_summary">Rated %1$.1f out of 5 by %2$d customers</string>
+    <plurals name="feature_product_ratings">
+        <item quantity="one">%1$d customer rating</item>
+        <item quantity="other">%1$d customer ratings</item>
+    </plurals>
+    <string name="feature_product_spec_id">Product ID</string>
+    <string name="feature_product_spec_category">Category</string>
+    <string name="feature_product_spec_price">Price</string>
+    <string name="feature_product_spec_rating">Average rating</string>
+    <string name="feature_product_spec_rating_value">%1$.1f out of 5</string>
+    <string name="feature_product_spec_reviews">Ratings</string>
+    <string name="feature_product_spec_availability">Availability</string>
+    <string name="feature_product_spec_on_request">On request: ask sales for delivery times</string>
+    <string name="feature_product_size">Size</string>
+    <string name="feature_product_description">Description</string>
+    <string name="feature_product_buy_now">Buy Now</string>
+    <string name="feature_product_add_to_cart_short">Add to cart</string>
 </resources>

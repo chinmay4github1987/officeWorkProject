@@ -24,11 +24,18 @@ class EnquiryViewModelTest {
     // Lazy: created inside the test, after MainDispatcherRule has replaced Dispatchers.Main (init launches a coroutine).
     private val viewModel by lazy { EnquiryViewModel(SavedStateHandle(mapOf("productId" to "3")), FakeCatalogueRepository(), enquiries, auth) }
 
-    private fun fill(name: String = "  Asha Rao ", email: String = "asha@example.com", phone: String = "", message: String = "Is it waterproof?") {
+    private fun fill(
+        name: String = "  Asha Rao ",
+        email: String = "asha@example.com",
+        phone: String = " +91 98765 43210 ",
+        message: String = "Is it waterproof?",
+        company: String = "",
+    ) {
         viewModel.onFieldChange(EnquiryField.Name, name)
         viewModel.onFieldChange(EnquiryField.Email, email)
         viewModel.onFieldChange(EnquiryField.Phone, phone)
         viewModel.onFieldChange(EnquiryField.Message, message)
+        viewModel.onFieldChange(EnquiryField.Company, company)
     }
 
     @Test
@@ -41,7 +48,7 @@ class EnquiryViewModelTest {
         fill()
         viewModel.onSubmit()
 
-        assertEquals(listOf(EnquiryRequest("3", "Asha Rao", "asha@example.com", phone = null, message = "Is it waterproof?")), enquiries.submitted)
+        assertEquals(listOf(EnquiryRequest("3", "Asha Rao", "asha@example.com", phone = "+91 98765 43210", message = "Is it waterproof?")), enquiries.submitted)
         assertEquals("ENQ-TEST0001", viewModel.uiState.value.receipt?.reference)
         assertFalse(viewModel.uiState.value.isSubmitting)
     }
@@ -103,5 +110,36 @@ class EnquiryViewModelTest {
         assertEquals(TestData.user.fullName, form.name)
         assertEquals(TestData.user.email, form.email)
         assertEquals(TestData.user.phone, form.phone)
+    }
+
+    @Test
+    fun `company is sent when given, and left out when blank`() {
+        fill(company = "  ABC Technologies ")
+        viewModel.onSubmit()
+
+        assertEquals("ABC Technologies", enquiries.submitted.single().company)
+    }
+
+    @Test
+    fun `missing phone and message are caught before sending`() {
+        fill(phone = "", message = "")
+        viewModel.onSubmit()
+
+        assertTrue(enquiries.submitted.isEmpty())
+        assertEquals(FieldError.Required, viewModel.uiState.value.errors[EnquiryField.Phone])
+        assertEquals(FieldError.Required, viewModel.uiState.value.errors[EnquiryField.Message])
+    }
+
+    @Test
+    fun `no thank-you until the submission is confirmed, and a retry can then succeed`() {
+        enquiries.failWith = DataError.Server(null)
+        fill()
+        viewModel.onSubmit()
+        assertNull(viewModel.uiState.value.receipt)
+        assertEquals(DataError.Server(null), viewModel.uiState.value.submitError)
+
+        enquiries.failWith = null
+        viewModel.onSubmit()
+        assertEquals("ENQ-TEST0001", viewModel.uiState.value.receipt?.reference)
     }
 }

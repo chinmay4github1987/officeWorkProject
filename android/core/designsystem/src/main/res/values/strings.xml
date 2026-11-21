@@ -2,4 +2,7 @@
     <string name="core_designsystem_rating_description">Rated %1$s out of 5 from %2$d reviews</string>
     <string name="core_designsystem_read_more">Read more</string>
     <string name="core_designsystem_show_less">Show less</string>
+    <string name="core_designsystem_available_on_request">Available on request</string>
+    <string name="core_designsystem_theme_light">Light</string>
+    <string name="core_designsystem_theme_dark">Dark</string>
 </resources>

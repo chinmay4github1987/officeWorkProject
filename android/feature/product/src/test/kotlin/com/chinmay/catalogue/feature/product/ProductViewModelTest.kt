@@ -65,4 +65,31 @@ class ProductViewModelTest {
 
         assertEquals(ProductEvent.AddToCartFailed(DataError.Network), viewModel.events.first())
     }
+
+    @Test
+    fun `related products come from the same category and never include the product itself`() {
+        val state = viewModel("10").uiState.value as ProductUiState.Success
+
+        assertEquals(listOf("9", "11"), state.related.map { it.id })
+    }
+
+    @Test
+    fun `the description becomes short feature bullets`() {
+        assertEquals(
+            listOf("Slim and light", "Fits 15 inch laptops", "Water resistant", "two pockets"),
+            ProductUiState.featuresOf("Slim and light. Fits 15 inch laptops! Water resistant; two pockets."),
+        )
+        assertEquals(listOf("One long sentence, with commas, stays whole"), ProductUiState.featuresOf("One long sentence, with commas, stays whole."))
+    }
+
+    @Test
+    fun `a failed load shows the error and Retry tries again`() {
+        repository.failWith = com.chinmay.catalogue.core.model.DataError.Network
+        val viewModel = viewModel()
+        assertEquals(ProductUiState.Error(com.chinmay.catalogue.core.model.DataError.Network), viewModel.uiState.value)
+
+        repository.failWith = null
+        viewModel.retry()
+        assertEquals("3", (viewModel.uiState.value as ProductUiState.Success).product.id)
+    }
 }

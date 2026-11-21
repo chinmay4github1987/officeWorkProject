@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -116,7 +117,7 @@ internal fun EnquiryScreen(
             )
         },
     ) { padding ->
-        // Cross-fade from the form to the thank-you view once the backend confirms.
+        // Cross-fade from the form to the thank-you view once the email has been sent.
         AnimatedContent(
             targetState = state.receipt != null,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -157,6 +158,8 @@ private fun Form(state: EnquiryUiState, onFieldChange: (EnquiryField, String) ->
             KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next))
         FormField(state, EnquiryField.Phone, R.string.feature_enquiry_phone, Icons.Filled.Phone, onFieldChange,
             KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next))
+        FormField(state, EnquiryField.Company, R.string.feature_enquiry_company, Icons.Filled.Home, onFieldChange,
+            KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next))
         FormField(state, EnquiryField.Message, R.string.feature_enquiry_message, Icons.Filled.Edit, onFieldChange,
             KeyboardOptions(capitalization = KeyboardCapitalization.Sentences), singleLine = false,
             placeholder = stringResource(R.string.feature_enquiry_message_placeholder),
@@ -246,10 +249,16 @@ private fun FormField(
 @Composable
 private fun errorMessage(error: FieldError, field: EnquiryField): String = when (error) {
     FieldError.Required -> stringResource(
-        if (field == EnquiryField.Email) R.string.feature_enquiry_error_required_email else R.string.feature_enquiry_error_required_name,
+        when (field) {
+            EnquiryField.Email -> R.string.feature_enquiry_error_required_email
+            EnquiryField.Phone -> R.string.feature_enquiry_error_required_phone
+            EnquiryField.Message -> R.string.feature_enquiry_error_required_message
+            else -> R.string.feature_enquiry_error_required_name
+        },
     )
     FieldError.InvalidEmail -> stringResource(R.string.feature_enquiry_error_email)
     FieldError.InvalidPhone -> stringResource(R.string.feature_enquiry_error_phone)
+    is FieldError.TooShort -> stringResource(R.string.feature_enquiry_error_too_short, error.min)
     is FieldError.TooLong -> stringResource(R.string.feature_enquiry_error_too_long, error.max)
     is FieldError.Server -> error.message
 }
@@ -264,6 +273,12 @@ private fun ProductSummary(product: Product) {
             ProductImage(product.imageUrl, contentDescription = null, modifier = Modifier.size(64.dp), padding = PaddingValues(6.dp))
             Column(Modifier.weight(1f)) {
                 Text(product.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                // Attached to the enquiry automatically, so sales know exactly which product it's about.
+                Text(
+                    stringResource(R.string.feature_enquiry_attached, product.id, product.category.name),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Text(product.price.formatted(), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             }
         }
@@ -284,7 +299,6 @@ private fun ThankYou(state: EnquiryUiState, onBackToProduct: () -> Unit, onConti
         label = "checkScale",
     )
 
-    val firstName = state.form.name.trim().substringBefore(' ')
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).readableWidth(480.dp).padding(Spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -297,15 +311,22 @@ private fun ThankYou(state: EnquiryUiState, onBackToProduct: () -> Unit, onConti
             Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(64.dp))
         }
         Text(
-            stringResource(R.string.feature_enquiry_thanks_title, firstName),
+            stringResource(R.string.feature_enquiry_thanks_title),
             style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
         Text(
-            stringResource(R.string.feature_enquiry_thanks_body, state.product?.title ?: stringResource(R.string.feature_enquiry_this_product), state.form.email.trim()),
+            stringResource(R.string.feature_enquiry_thanks_body),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        // The product the enquiry is about, so the confirmation is specific.
+        Text(
+            state.product?.title ?: stringResource(R.string.feature_enquiry_this_product),
+            style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )
         Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.small) {

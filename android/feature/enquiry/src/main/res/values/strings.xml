@@ -4,8 +4,9 @@
     <string name="feature_enquiry_intro">Leave your details and our sales team will get back to you about this product.</string>
     <string name="feature_enquiry_name">Full name</string>
     <string name="feature_enquiry_email">Email</string>
-    <string name="feature_enquiry_phone">Phone (optional)</string>
-    <string name="feature_enquiry_message">Message (optional)</string>
+    <string name="feature_enquiry_phone">Phone number</string>
+    <string name="feature_enquiry_company">Company name (optional)</string>
+    <string name="feature_enquiry_message">Your enquiry</string>
     <string name="feature_enquiry_message_placeholder">Ask about sizes, stock, delivery…</string>
     <string name="feature_enquiry_privacy">We only use these details to reply to this enquiry.</string>
     <string name="feature_enquiry_submit">Send enquiry</string>
@@ -13,13 +14,17 @@
     <string name="feature_enquiry_error_required_name">Enter your name</string>
     <string name="feature_enquiry_error_required_email">Enter your email address</string>
     <string name="feature_enquiry_error_email">Enter a valid email address, like name@example.com</string>
-    <string name="feature_enquiry_error_phone">Enter a valid phone number</string>
+    <string name="feature_enquiry_error_phone">Enter a valid phone number, like +91 98765 43210</string>
+    <string name="feature_enquiry_error_required_phone">Enter your phone number</string>
+    <string name="feature_enquiry_error_required_message">Tell us what you would like to know</string>
+    <string name="feature_enquiry_error_too_short">Must be at least %1$d characters</string>
     <string name="feature_enquiry_error_too_long">Must be %1$d characters or fewer</string>
-    <string name="feature_enquiry_thanks_title">Thank you, %1$s!</string>
-    <string name="feature_enquiry_thanks_body">Your enquiry about %1$s is with our sales team. They\'ll reply to %2$s.</string>
+    <string name="feature_enquiry_thanks_title">Thank You!</string>
+    <string name="feature_enquiry_thanks_body">Your enquiry has been submitted successfully. Our sales team will contact you shortly.</string>
     <string name="feature_enquiry_reference">Reference %1$s</string>
     <string name="feature_enquiry_back_to_product">Back to product</string>
     <string name="feature_enquiry_continue">Continue browsing</string>
     <string name="feature_enquiry_this_product">this product</string>
+    <string name="feature_enquiry_attached">Product ID %1$s · %2$s</string>
     <string name="feature_enquiry_counter">%1$d / %2$d</string>
 </resources>

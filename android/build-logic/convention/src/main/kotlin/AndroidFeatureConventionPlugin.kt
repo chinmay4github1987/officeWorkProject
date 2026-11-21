@@ -1,10 +1,11 @@
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 
 /**
- * One plugin = everything a feature module needs: Android library + Compose + Hilt + type-safe navigation,
- * and the core modules a screen may use. Features never depend on other features; :app connects them.
+ * A feature module: a library with Compose, Hilt and navigation, depending only on core modules.
+ * Its unit tests can also render its screens (Compose UI tests on Robolectric), so UI tests need no emulator.
  */
 class AndroidFeatureConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -14,6 +15,9 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
             pluginManager.apply("catalogue.android.hilt")
             // Navigation routes are @Serializable classes.
             pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
+
+            // Robolectric UI tests read the module's real strings, themes and fonts.
+            extensions.getByType(LibraryExtension::class.java).testOptions.unitTests.isIncludeAndroidResources = true
 
             dependencies {
                 add("implementation", project(":core:model"))
@@ -29,6 +33,12 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", libs.lib("kotlinx-serialization-json"))
 
                 add("testImplementation", project(":core:testing"))
+                // Compose UI tests on the JVM (Robolectric).
+                add("testImplementation", platform(libs.lib("androidx-compose-bom")))
+                add("testImplementation", libs.lib("androidx-compose-ui-test-junit4"))
+                add("testImplementation", libs.lib("robolectric"))
+                // The empty activity createComposeRule() launches.
+                add("debugImplementation", libs.lib("androidx-compose-ui-test-manifest"))
             }
         }
     }

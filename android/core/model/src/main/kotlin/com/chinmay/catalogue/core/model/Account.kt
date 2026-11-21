@@ -1,6 +1,6 @@
 package com.chinmay.catalogue.core.model
 
-/** The signed-in customer, as our backend describes them. Never holds a password. */
+/** The signed-in customer, from their Fake Store profile. Never holds a password or an address. */
 data class User(
     val id: String,
     val username: String,
@@ -15,7 +15,7 @@ data class User(
 data class CartItem(
     val product: Product,
     val quantity: Int,
-    /** Calculated by the backend from today's price; the app never multiplies prices itself. */
+    /** Today's price × quantity, rounded to the cent (the cart repository works it out from the live catalogue). */
     val lineTotal: Money,
 )
 

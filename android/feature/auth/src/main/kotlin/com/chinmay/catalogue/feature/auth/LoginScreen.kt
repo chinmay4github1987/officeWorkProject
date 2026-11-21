@@ -1,7 +1,9 @@
 package com.chinmay.catalogue.feature.auth
 
 import android.content.pm.ApplicationInfo
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,8 +24,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +34,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +48,8 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -55,8 +60,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chinmay.catalogue.core.designsystem.component.readableWidth
 import com.chinmay.catalogue.core.designsystem.component.catalogueTextFieldColors
+import com.chinmay.catalogue.core.designsystem.component.CircleIconButton
 import com.chinmay.catalogue.core.designsystem.component.PrimaryButton
 import com.chinmay.catalogue.core.designsystem.theme.CatalogueTheme
+import com.chinmay.catalogue.core.designsystem.theme.PillShape
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
 import com.chinmay.catalogue.core.ui.errorText
 
@@ -86,7 +93,6 @@ internal fun LoginRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun LoginScreen(
     state: LoginUiState,
@@ -103,15 +109,15 @@ internal fun LoginScreen(
         onSubmit()
     }
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.feature_auth_close))
-                    }
-                },
-            )
+            Box(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = Spacing.lg, vertical = Spacing.md)) {
+                CircleIconButton(
+                    icon = Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.feature_auth_close),
+                    onClick = onClose,
+                )
+            }
         },
     ) { padding ->
         Column(
@@ -125,9 +131,16 @@ internal fun LoginScreen(
                 .padding(horizontal = Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
+            // Brand mark: minimalist rounded dark tile with cart icon
+            Box(
+                Modifier.padding(top = Spacing.sm, bottom = Spacing.md).size(64.dp).background(MaterialTheme.colorScheme.onSurface, RoundedCornerShape(20.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.ShoppingCart, contentDescription = null, tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(30.dp))
+            }
             Text(
                 stringResource(R.string.feature_auth_title),
-                style = MaterialTheme.typography.displaySmall,
+                style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.semantics { heading() },
             )
             Text(
@@ -135,7 +148,7 @@ internal fun LoginScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(Spacing.sm))
+            Spacer(Modifier.height(Spacing.md))
 
             OutlinedTextField(
                 colors = catalogueTextFieldColors(),
@@ -149,7 +162,7 @@ internal fun LoginScreen(
                 enabled = !state.isSubmitting,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next, autoCorrectEnabled = false),
                 keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                shape = MaterialTheme.shapes.medium,
+                shape = PillShape,
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
@@ -170,7 +183,7 @@ internal fun LoginScreen(
                 enabled = !state.isSubmitting,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, autoCorrectEnabled = false),
                 keyboardActions = KeyboardActions(onDone = { submit() }),
-                shape = MaterialTheme.shapes.medium,
+                shape = PillShape,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -207,7 +220,7 @@ internal fun LoginScreen(
 
 @Composable
 private fun DemoAccountHint(onUse: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth()) {
+    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(start = Spacing.md, top = Spacing.xs, bottom = Spacing.xs, end = Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,

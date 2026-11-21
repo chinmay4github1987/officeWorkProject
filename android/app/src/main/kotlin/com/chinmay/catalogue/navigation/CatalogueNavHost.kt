@@ -32,7 +32,7 @@ import com.chinmay.catalogue.feature.search.navigation.searchScreen
  * this is the only place that decides where each callback leads. Features stay independent.
  */
 @Composable
-fun CatalogueNavHost(navController: NavHostController = rememberNavController()) {
+fun CatalogueNavHost(navController: NavHostController = rememberNavController(), onOpenDrawer: () -> Unit = {}) {
     NavHost(
         navController = navController,
         startDestination = HomeDestination,
@@ -43,6 +43,7 @@ fun CatalogueNavHost(navController: NavHostController = rememberNavController())
         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(300)) + fadeOut(tween(300)) },
     ) {
         homeScreen(
+            onMenuClick = onOpenDrawer,
             onSearchClick = navController::navigateToSearch,
             onProductClick = navController::navigateToProduct,
             onCategoryClick = { navController.navigateToCategory(it.slug, it.name) },
@@ -64,6 +65,7 @@ fun CatalogueNavHost(navController: NavHostController = rememberNavController())
             onViewCart = navController::navigateToCart,
             // Sign in, then come straight back to this product to add it.
             onSignInRequired = navController::navigateToLogin,
+            onProductClick = navController::navigateToProduct,
         )
         loginScreen(
             onClose = navController::popBackStack,

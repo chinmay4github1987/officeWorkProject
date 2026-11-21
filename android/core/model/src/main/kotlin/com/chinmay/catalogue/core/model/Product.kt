@@ -1,7 +1,7 @@
 package com.chinmay.catalogue.core.model
 
 /**
- * The app's own product type. Network DTOs are mapped into it, so a backend change
+ * The app's own product type. Network DTOs are mapped into it, so a data-source change
  * touches one mapper in :core:network, not every screen.
  */
 data class Product(

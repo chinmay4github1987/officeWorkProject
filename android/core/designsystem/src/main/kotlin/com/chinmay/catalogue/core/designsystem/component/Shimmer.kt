@@ -32,7 +32,7 @@ fun Modifier.shimmer(shape: Shape): Modifier = composed {
         label = "shimmerX",
     )
     background(
-        brush = Brush.linearGradient(listOf(base, highlight, base), start = Offset(x, 0f), end = Offset(x + 400f, 400f)),
+        brush = Brush.linearGradient(listOf(base, highlight, base), start = Offset(x, 0f), end = Offset(x + 600f, 0f)),
         shape = shape,
     )
 }

@@ -39,7 +39,7 @@ class FakeAuthRepository : AuthRepository {
 }
 
 /**
- * A cart over [TestData.products] that behaves like the backend: prices from the product list,
+ * A cart over [TestData.products] that behaves like the real one: prices from the product list,
  * quantities 1–99, and Unauthorized when [auth] has nobody signed in.
  */
 class FakeCartRepository(private val auth: FakeAuthRepository) : CartRepository {

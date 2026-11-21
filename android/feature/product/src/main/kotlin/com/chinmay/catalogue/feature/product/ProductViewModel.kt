@@ -23,7 +23,29 @@ import javax.inject.Inject
 sealed interface ProductUiState {
     data object Loading : ProductUiState
     data class Error(val error: DataError) : ProductUiState
-    data class Success(val product: Product, val isAddingToCart: Boolean = false) : ProductUiState
+    data class Success(
+        val product: Product,
+        val isAddingToCart: Boolean = false,
+        /** "Customers also viewed": up to [MAX_RELATED] other products from the same category. */
+        val related: List<Product> = emptyList(),
+    ) : ProductUiState {
+        /** The description as short feature bullets (Fake Store has no separate feature list). */
+        val features: List<String> get() = featuresOf(product.description)
+    }
+
+    companion object {
+        const val MAX_RELATED = 6
+
+        /**
+         * Splits a description into sentence-sized bullets: on ". ", "! ", "? " and ";". A description that is one
+         * long sentence stays one bullet. Empty pieces are dropped, at most 6 bullets.
+         */
+        fun featuresOf(description: String): List<String> = description
+            .split(Regex("(?<=[.!?])\\s+|;\\s*|\\r?\\n+"))
+            .map { it.trim().trimEnd('.', ';', '!').trim() }
+            .filter { it.length > 2 }
+            .take(6)
+    }
 }
 
 /** One-off things that happen once (a snackbar, a navigation), not state the screen keeps showing. */
@@ -82,10 +104,18 @@ class ProductViewModel @Inject constructor(
 
     private fun load() {
         viewModelScope.launch {
-            _uiState.value = when (val result = repository.product(productId)) {
-                is DataResult.Success -> ProductUiState.Success(result.data)
-                is DataResult.Failure -> ProductUiState.Error(result.error)
+            val product = when (val result = repository.product(productId)) {
+                is DataResult.Success -> result.data
+                is DataResult.Failure -> {
+                    _uiState.value = ProductUiState.Error(result.error)
+                    return@launch
+                }
             }
+            _uiState.value = ProductUiState.Success(product)
+            // Related products come from the same category (cached catalogue); the page shows without waiting for them.
+            val page = (repository.category(product.category.slug) as? DataResult.Success)?.data ?: return@launch
+            val related = (page.topRated + page.more).filter { it.id != product.id }.distinctBy { it.id }.take(ProductUiState.MAX_RELATED)
+            _uiState.update { (it as? ProductUiState.Success)?.copy(related = related) ?: it }
         }
     }
 }

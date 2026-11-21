@@ -15,6 +15,7 @@ data object HomeDestination
  * so it doesn't need to know other features exist; :app decides where each callback goes.
  */
 fun NavGraphBuilder.homeScreen(
+    onMenuClick: () -> Unit,
     onSearchClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onCategoryClick: (Category) -> Unit,
@@ -23,6 +24,7 @@ fun NavGraphBuilder.homeScreen(
 ) {
     composable<HomeDestination> {
         HomeRoute(
+            onMenuClick = onMenuClick,
             onSearchClick = onSearchClick,
             onProductClick = onProductClick,
             onCategoryClick = onCategoryClick,

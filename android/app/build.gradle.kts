@@ -9,17 +9,19 @@ plugins {
 android {
     namespace = "com.chinmay.catalogue"
 
-    defaultConfig {
-        applicationId = "com.chinmay.catalogue"
-        versionCode = 1
-        versionName = "0.1.0"
-    }
+    testOptions { unitTests.isIncludeAndroidResources = true }
 
     packaging {
         resources {
             // JavaMail (android-mail, android-activation) and jakarta.inject each ship these files under the same path.
             excludes += setOf("META-INF/NOTICE.md", "META-INF/LICENSE.md")
         }
+    }
+
+    defaultConfig {
+        applicationId = "com.chinmay.catalogue"
+        versionCode = 1
+        versionName = "0.1.0"
     }
 
     buildTypes {
@@ -47,5 +49,16 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.hilt.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.kotlinx.serialization.json)
+
+    // Drawer and shell tests: Compose UI on the JVM (Robolectric) plus the hand-written fakes.
+    testImplementation(project(":core:testing"))
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

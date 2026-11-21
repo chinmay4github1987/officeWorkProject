@@ -2,15 +2,12 @@
 #
 #   Pull request / push to main -> tests + APKs attached to the run (Actions tab -> run -> Artifacts).
 #   Tag v*  (git tag v0.2.0 && git push origin v0.2.0) -> same, plus a GitHub Release with both APKs.
-#   Run workflow button -> same as a push, and you can point the app at a different backend.
+#   Run workflow button -> same as a push.
 #
-# Enquiry email from the app: the APK build reads SMTP_HOST, SMTP_PORT, SMTP_SECURITY, SMTP_USERNAME,
-# SMTP_PASSWORD, SMTP_FROM and SALES_INBOX from the repository's Actions secrets (see android/.env.example).
-#
-# The APK talks to OUR backend, never to Fake Store. Its URL is baked in at build time from
-# catalogue.apiBaseUrl (android/gradle.properties). The default, http://10.0.2.2:3000/, only works on an
-# emulator whose host machine is running the backend. For a phone, run the workflow by hand and give the
-# deployed backend's https:// URL (plain http is only allowed for 10.0.2.2, see network_security_config.xml).
+# The APK needs no server: live data comes from https://fakestoreapi.com, and enquiries are posted to a Formspree
+# form that emails the sales inbox. The form's ID is read from the repository's Actions variable or secret
+# FORMSPREE_FORM_ID (Settings -> Secrets and variables -> Actions). It isn't a password; without it, enquiries show
+# "not set up yet". No SMTP or API passwords are ever built into the app.
 name: Android
 
 on:
@@ -21,11 +18,6 @@ on:
     paths: ['android/**', '.github/workflows/android.yml']
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      api_base_url:
-        description: 'Backend URL baked into the APK (must end with /). Empty = gradle.properties default (emulator only).'
-        required: false
-        default: ''
 
 # A newer push to the same branch cancels the older, now pointless, build.
 concurrency:
@@ -53,53 +45,22 @@ jobs:
       # Caches Gradle and checks gradle-wrapper.jar against Gradle's published checksums.
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Choose the backend URL
-        id: api
-        env:
-          # Passed through env, never pasted into the script, so the input can't inject shell commands.
-          INPUT_URL: ${{ inputs.api_base_url }}
-        run: |
-          if [ -z "$INPUT_URL" ]; then
-            echo "Using the default from gradle.properties"
-            echo "args=" >> "$GITHUB_OUTPUT"
-          elif [[ "$INPUT_URL" =~ ^https?://[A-Za-z0-9.:-]+(/[A-Za-z0-9._~/-]*)?/$ ]]; then
-            echo "Using $INPUT_URL"
-            echo "args=-Pcatalogue.apiBaseUrl=$INPUT_URL" >> "$GITHUB_OUTPUT"
-          else
-            echo "::error::api_base_url must look like https://api.example.com/ (and end with /)"
-            exit 1
-          fi
+      # testDebugUnitTest covers the Android modules (including the Robolectric UI tests);
+      # core:model is plain Kotlin, so its task is just `test`.
+      - name: Unit and UI tests
+        run: ./gradlew testDebugUnitTest :core:model:test
 
-      # testDebugUnitTest covers the Android modules; core:model is plain Kotlin, so its task is just `test`.
-      - name: Unit tests
-        run: ./gradlew testDebugUnitTest :core:model:test ${{ steps.api.outputs.args }}
-
-      # SMTP settings for emailing enquiries from the app come from the repository's Actions secrets
-      # (Settings -> Secrets and variables -> Actions), the same names as android/.env.example.
-      # A missing secret is just empty: with no SMTP_HOST the APK sends enquiries through the backend instead.
-      # Warning: the values are built into the APKs, and this repo's artifacts and releases are downloadable.
       - name: Build APKs
         env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_SECURITY: ${{ secrets.SMTP_SECURITY }}
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          SMTP_FROM: ${{ secrets.SMTP_FROM }}
-          SALES_INBOX: ${{ secrets.SALES_INBOX }}
+          # An Actions variable (not secret, it's public in the form's URL) or, if you prefer, a secret.
+          FORMSPREE_FORM_ID: ${{ vars.FORMSPREE_FORM_ID || secrets.FORMSPREE_FORM_ID }}
         run: |
-          # Empty secrets must not override the build's defaults (an empty SMTP_PORT isn't a number).
-          for name in SMTP_HOST SMTP_PORT SMTP_SECURITY SMTP_USERNAME SMTP_PASSWORD SMTP_FROM SALES_INBOX; do
-            [ -z "${!name}" ] && unset "$name"
-          done
-          if [ -n "${SMTP_HOST:-}" ] && [ -n "${SALES_INBOX:-}" ]; then
-            # Only says whether each value exists; never prints one.
-            password_state="missing"; [ -n "${SMTP_PASSWORD:-}" ] && password_state="present"
-            echo "Enquiry email: ON (sent from the app over SMTP; password secret $password_state)"
+          if [ -n "$FORMSPREE_FORM_ID" ]; then
+            echo "Enquiries: ON (posted to Formspree form $FORMSPREE_FORM_ID)"
           else
-            echo "Enquiry email: OFF (add SMTP_HOST and SALES_INBOX secrets to turn it on); enquiries go through the backend"
+            echo "Enquiries: OFF (add a FORMSPREE_FORM_ID variable to turn them on)"
           fi
-          ./gradlew :app:assembleDebug :app:assembleRelease ${{ steps.api.outputs.args }}
+          ./gradlew :app:assembleDebug :app:assembleRelease
 
       - name: Name the APKs after the commit
         id: apk

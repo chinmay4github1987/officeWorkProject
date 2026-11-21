@@ -1,6 +1,22 @@
 <resources>
     <string name="feature_category_back">Back</string>
+    <string name="feature_category_eyebrow">Collection</string>
     <string name="feature_category_top_rated">Top rated in %1$s</string>
     <string name="feature_category_more">More in %1$s</string>
-    <string name="feature_category_count">%1$d products</string>
+    <plurals name="feature_category_count">
+        <item quantity="one">%1$d product</item>
+        <item quantity="other">%1$d products</item>
+    </plurals>
+    <plurals name="feature_category_load_more">
+        <item quantity="one">Load %1$d more product</item>
+        <item quantity="other">Load more (%1$d left)</item>
+    </plurals>
+    <string name="feature_category_empty_title">Nothing here yet</string>
+    <string name="feature_category_empty_message">This category has no products right now. Try another one above.</string>
+    <!-- Short banner copy per Fake Store category. -->
+    <string name="feature_category_about_electronics">Drives, monitors and smart tech, picked for everyday work and play.</string>
+    <string name="feature_category_about_jewelery">Rings, bracelets and pieces that make a thoughtful gift.</string>
+    <string name="feature_category_about_mens_clothing">Easy jackets, tees and backpacks for every season.</string>
+    <string name="feature_category_about_womens_clothing">Comfortable layers and wardrobe staples, made to last.</string>
+    <string name="feature_category_about_generic">Hand-picked products, with the best rated first.</string>
 </resources>

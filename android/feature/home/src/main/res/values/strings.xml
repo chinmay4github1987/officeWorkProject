@@ -1,18 +1,23 @@
 <resources>
     <string name="feature_home_title">Discover</string>
-    <string name="feature_home_eyebrow">Curated collection</string>
-    <string name="feature_home_subtitle">Thoughtfully selected pieces, ready when you are.</string>
+    <string name="feature_home_best_picks">Best picks</string>
+    <string name="feature_home_greeting">Hi, %1$s</string>
+    <string name="feature_home_menu">Menu</string>
+    <string name="feature_home_search">Search</string>
     <string name="feature_home_search_placeholder">Search products</string>
-    <string name="feature_home_top_rated">Top rated</string>
-    <string name="feature_home_top_rated_subtitle">Chosen by our team</string>
+    <string name="feature_home_hero_eyebrow">Top rated · #%1$d</string>
+    <string name="feature_home_hero_page">Top rated product %1$d of %2$d</string>
+    <string name="feature_home_shop_now">Shop now</string>
     <string name="feature_home_categories">Shop by category</string>
-    <string name="feature_home_greeting">Welcome back, %1$s</string>
+    <string name="feature_home_top_picks">Top picks for you</string>
+    <string name="feature_home_added">Added to cart: %1$s</string>
+    <string name="feature_home_view_cart">View cart</string>
     <string name="feature_home_cart">Cart</string>
     <plurals name="feature_home_cart_with_items">
         <item quantity="one">Cart, %1$d item</item>
         <item quantity="other">Cart, %1$d items</item>
     </plurals>
-    <string name="feature_home_sign_in">Sign in</string>
-    <string name="feature_home_account">Account</string>
-    <string name="feature_home_sign_out">Sign out</string>
+    <string name="feature_home_popular_products">Popular Product</string>
+    <string name="feature_home_see_more">See More</string>
+    <string name="feature_home_all_categories">All</string>
 </resources>

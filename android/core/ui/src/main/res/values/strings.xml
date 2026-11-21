@@ -13,4 +13,6 @@
     <string name="core_ui_error_unauthorized_message">Your session has ended. Sign in again to see your cart.</string>
     <string name="core_ui_retry">Try again</string>
     <string name="core_ui_no_image">No image</string>
+    <string name="core_ui_view_details">View details</string>
+    <string name="core_ui_add_to_cart">Add %1$s to cart</string>
 </resources>

@@ -1,7 +1,9 @@
 package com.chinmay.catalogue.feature.home
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,69 +14,76 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chinmay.catalogue.core.designsystem.component.ReadableWidth
 import com.chinmay.catalogue.core.designsystem.component.SearchPill
-import com.chinmay.catalogue.core.designsystem.component.WindowWidth
-import com.chinmay.catalogue.core.designsystem.component.SectionHeader
 import com.chinmay.catalogue.core.designsystem.component.SkeletonBox
 import com.chinmay.catalogue.core.designsystem.theme.CatalogueTheme
+import com.chinmay.catalogue.core.designsystem.theme.PillShape
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
-import com.chinmay.catalogue.core.model.Category
 import com.chinmay.catalogue.core.model.CatalogueHome
+import com.chinmay.catalogue.core.model.Category
 import com.chinmay.catalogue.core.model.Money
 import com.chinmay.catalogue.core.model.Product
 import com.chinmay.catalogue.core.model.Rating
-import com.chinmay.catalogue.core.ui.CategoryCard
 import com.chinmay.catalogue.core.ui.DataErrorState
-import com.chinmay.catalogue.core.ui.FeaturedProductCard
-import com.chinmay.catalogue.core.ui.FeaturedProductCardSkeleton
+import com.chinmay.catalogue.core.ui.ProductCard
+import com.chinmay.catalogue.core.ui.ProductImage
+import com.chinmay.catalogue.core.ui.errorText
 
 /** Stateful entry point: gets the ViewModel from Hilt and hands plain state + callbacks to [HomeScreen]. */
 @Composable
 internal fun HomeRoute(
+    onMenuClick: () -> Unit,
     onSearchClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onCategoryClick: (Category) -> Unit,
@@ -84,22 +93,32 @@ internal fun HomeRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val account by viewModel.account.collectAsStateWithLifecycle()
+    val cartMessage by viewModel.cartMessage.collectAsStateWithLifecycle()
     HomeScreen(
         state = state,
         account = account,
+        cartMessage = cartMessage,
+        onMenuClick = onMenuClick,
         onSearchClick = onSearchClick,
         onProductClick = onProductClick,
         onCategoryClick = onCategoryClick,
         onCartClick = onCartClick,
-        onSignInClick = onSignInClick,
-        onSignOutClick = viewModel::signOut,
+        onAddToCart = { product -> if (account.user == null) onSignInClick() else viewModel.addToCart(product) },
+        onCartMessageShown = viewModel::cartMessageShown,
         onRetry = viewModel::retry,
         onRefresh = viewModel::refresh,
     )
 }
 
-/** Stateless: renders whatever state it is given, so it can be previewed and tested without a ViewModel. */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+/**
+ * Maniro UI Kit - Minimalist Online Store Home Screen:
+ * - Clean brand header with logo, search icon & cart count badge.
+ * - Rounded search bar with filter icon.
+ * - "Popular Product" carousel with clean category & featured thumbnails.
+ * - Minimalist filter pills (Active black pill with white text).
+ * - 2-Column Product Grid with neutral grey photo tiles and heart badges.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HomeScreen(
     state: HomeUiState,
@@ -109,68 +128,120 @@ internal fun HomeScreen(
     onRetry: () -> Unit,
     onRefresh: () -> Unit,
     account: HomeAccount = HomeAccount(),
+    cartMessage: CartMessage? = null,
+    onMenuClick: () -> Unit = {},
     onCartClick: () -> Unit = {},
-    onSignInClick: () -> Unit = {},
-    onSignOutClick: () -> Unit = {},
+    onAddToCart: (Product) -> Unit = {},
+    onCartMessageShown: () -> Unit = {},
 ) {
-    val columns = WindowWidth.gridColumns()
-    Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
+    val snackbar = remember { SnackbarHostState() }
+    CartMessageSnackbar(cartMessage, snackbar, onCartClick, onCartMessageShown)
+
+    // Local selected category filter for the pills (null means "All")
+    var selectedCategorySlug by remember { mutableStateOf<String?>(null) }
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(0),
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbar, Modifier.navigationBarsPadding()) },
+    ) { padding ->
         PullToRefreshBox(
             isRefreshing = (state as? HomeUiState.Success)?.isRefreshing == true,
             onRefresh = onRefresh,
-            // Content stops at the status bar, so the pinned search bar never slides under the clock.
-            modifier = Modifier.fillMaxSize().padding(padding).statusBarsPadding(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .statusBarsPadding(),
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding(),
                 contentPadding = PaddingValues(bottom = Spacing.xxl),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md),
             ) {
-                item { Header(account, onCartClick, onSignInClick, onSignOutClick) }
-                // Search stays pinned while you scroll: the fastest route to a product is always one tap away.
-                stickyHeader(key = "search") {
-                    Surface(color = MaterialTheme.colorScheme.background) {
+                // 1. Maniro Brand Header
+                item {
+                    ManiroHeader(
+                        account = account,
+                        onMenuClick = onMenuClick,
+                        onSearchClick = onSearchClick,
+                        onCartClick = onCartClick,
+                    )
+                }
+
+                // 2. Search Pill
+                item {
+                    Box(modifier = Modifier.padding(horizontal = Spacing.lg)) {
                         SearchPill(
-                            stringResource(R.string.feature_home_search_placeholder),
+                            placeholder = stringResource(R.string.feature_home_search_placeholder),
                             onClick = onSearchClick,
-                            // Search fields don't need to span a whole tablet or TV screen.
-                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm).widthIn(max = ReadableWidth),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = ReadableWidth),
                         )
                     }
                 }
+
                 when (state) {
                     HomeUiState.Loading -> item { LoadingContent() }
                     is HomeUiState.Error -> item { DataErrorState(state.error, onRetry) }
                     is HomeUiState.Success -> {
-                        item {
-                            SectionHeader(
-                                stringResource(R.string.feature_home_top_rated),
-                                subtitle = stringResource(R.string.feature_home_top_rated_subtitle),
-                            )
-                        }
-                        item {
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = Spacing.lg),
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-                            ) {
-                                itemsIndexed(state.home.featured, key = { _, p -> p.id }) { index, product ->
-                                    FeaturedProductCard(product, rank = index + 1, onClick = { onProductClick(product.id) })
-                                }
+                        // 3. Popular Product Section (Maniro style)
+                        if (state.home.featured.isNotEmpty()) {
+                            item {
+                                SectionHeaderRow(
+                                    title = stringResource(R.string.feature_home_popular_products),
+                                    actionLabel = stringResource(R.string.feature_home_see_more),
+                                    onAction = { onCategoryClick(state.home.categories.firstOrNull() ?: Category("", "")) },
+                                )
+                            }
+                            item {
+                                PopularProductsRow(
+                                    featured = state.home.featured,
+                                    onProductClick = onProductClick,
+                                )
                             }
                         }
-                        item { SectionHeader(stringResource(R.string.feature_home_categories)) }
-                        // A simple grid inside the list (a nested LazyVerticalGrid can't scroll inside a LazyColumn).
-                        // 2 columns on phones, 3 on unfolded foldables and portrait tablets, 4 on wide windows and TV.
-                        state.home.categories.chunked(columns).forEachIndexed { row, cells ->
-                            item(key = "categories-$columns-$row") {
+
+                        // 4. Category Filter Pills (All + Categories in Maniro black/grey pills)
+                        if (state.home.categories.isNotEmpty()) {
+                            item {
+                                CategoryPillRow(
+                                    categories = state.home.categories,
+                                    selectedSlug = selectedCategorySlug,
+                                    onSelect = { selectedCategorySlug = it },
+                                    onCategoryDoubleClick = onCategoryClick,
+                                )
+                            }
+                        }
+
+                        // 5. 2-Column Product Grid
+                        val allProducts = (state.home.featured + state.picks).distinctBy { it.id }
+                        val filteredProducts = if (selectedCategorySlug == null) {
+                            allProducts
+                        } else {
+                            allProducts.filter { it.category.slug == selectedCategorySlug }
+                        }
+
+                        if (filteredProducts.isNotEmpty()) {
+                            val rows = filteredProducts.chunked(2)
+                            items(rows, key = { row -> row.first().id }) { pair ->
                                 Row(
-                                    Modifier.fillMaxWidth().padding(horizontal = Spacing.lg),
+                                    Modifier.padding(horizontal = Spacing.lg),
                                     horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                                 ) {
-                                    cells.forEachIndexed { col, category ->
-                                        CategoryCard(category, index = row * columns + col, onClick = { onCategoryClick(category) }, modifier = Modifier.weight(1f))
+                                    pair.forEach { product ->
+                                        ProductCard(
+                                            product = product,
+                                            onClick = { onProductClick(product.id) },
+                                            onAddToCart = { onAddToCart(product) },
+                                            modifier = Modifier.weight(1f),
+                                        )
                                     }
-                                    repeat(columns - cells.size) { Spacer(Modifier.weight(1f)) }
+                                    if (pair.size == 1) {
+                                        Spacer(Modifier.weight(1f))
+                                    }
                                 }
                             }
                         }
@@ -181,127 +252,312 @@ internal fun HomeScreen(
     }
 }
 
+/**
+ * Maniro Top Header:
+ * - Brand logo / title "Maniro"
+ * - Circular Menu, Search, and Cart icons with count badge
+ */
 @Composable
-private fun Header(account: HomeAccount, onCartClick: () -> Unit, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
-    Column(Modifier.padding(horizontal = Spacing.lg).padding(top = Spacing.lg)) {
-        // Top row: small gold "eyebrow" (who you are / the collection) with round actions on the right.
-        Row(verticalAlignment = Alignment.CenterVertically) {
+private fun ManiroHeader(
+    account: HomeAccount,
+    onMenuClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onCartClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            IconButton(
+                onClick = onMenuClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
+            ) {
+                Icon(
+                    Icons.Filled.Menu,
+                    contentDescription = stringResource(R.string.feature_home_menu),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
             Text(
-                (account.user?.let { stringResource(R.string.feature_home_greeting, it.firstName) } ?: stringResource(R.string.feature_home_eyebrow)).uppercase(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
+                text = "Maniro",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            AccountButton(account, onSignInClick, onSignOutClick)
-            Spacer(Modifier.width(Spacing.sm))
-            CartButton(account.cartCount, onCartClick)
         }
-        Spacer(Modifier.height(Spacing.md))
-        // Editorial headline: large serif, the one place the page "speaks".
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            // Search button
+            IconButton(
+                onClick = onSearchClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
+            ) {
+                Icon(
+                    Icons.Filled.Search,
+                    contentDescription = stringResource(R.string.feature_home_search),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+
+            // Cart with notification/badge
+            val cartLabel = if (account.cartCount > 0) {
+                pluralStringResource(R.plurals.feature_home_cart_with_items, account.cartCount, account.cartCount)
+            } else {
+                stringResource(R.string.feature_home_cart)
+            }
+            BadgedBox(
+                badge = {
+                    if (account.cartCount > 0) {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary,
+                        ) {
+                            Text(account.cartCount.coerceAtMost(99).toString(), fontSize = 10.sp)
+                        }
+                    }
+                },
+            ) {
+                IconButton(
+                    onClick = onCartClick,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
+                ) {
+                    Icon(
+                        Icons.Filled.ShoppingCart,
+                        contentDescription = cartLabel,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Section title with "See More" on right, exactly like Maniro UI Kit */
+@Composable
+private fun SectionHeaderRow(
+    title: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
         Text(
-            stringResource(R.string.feature_home_title),
-            style = MaterialTheme.typography.displaySmall,
+            text = title,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.semantics { heading() },
         )
-        Spacer(Modifier.height(Spacing.xs))
-        Text(
-            stringResource(R.string.feature_home_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** Round, softly raised header actions (44dp: comfortably above the 40dp minimum and easy to hit with D-pad). */
-@Composable
-private fun headerButtonColors() = IconButtonDefaults.filledTonalIconButtonColors(
-    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-    contentColor = MaterialTheme.colorScheme.onSurface,
-)
-
-/** Cart with a count badge. The badge is part of the button's label for screen readers. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CartButton(count: Int, onClick: () -> Unit) {
-    val label = if (count > 0) {
-        pluralStringResource(R.plurals.feature_home_cart_with_items, count, count)
-    } else {
-        stringResource(R.string.feature_home_cart)
-    }
-    FilledTonalIconButton(
-        onClick = onClick,
-        colors = headerButtonColors(),
-        modifier = Modifier.size(44.dp).semantics { contentDescription = label },
-    ) {
-        BadgedBox(badge = { if (count > 0) Badge { Text(if (count > 99) "99+" else count.toString()) } }) {
-            Icon(Icons.Filled.ShoppingCart, contentDescription = null)
-        }
-    }
-}
-
-/** Signed out: goes straight to sign-in. Signed in: a small menu with who you are and Sign out. */
-@Composable
-private fun AccountButton(account: HomeAccount, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
-    var menuOpen by remember { mutableStateOf(false) }
-    val user = account.user
-    Box {
-        FilledTonalIconButton(
-            onClick = { if (user == null) onSignInClick() else menuOpen = true },
-            colors = headerButtonColors(),
-            modifier = Modifier.size(44.dp),
-        ) {
-            Icon(
-                Icons.Filled.AccountCircle,
-                contentDescription = stringResource(if (user == null) R.string.feature_home_sign_in else R.string.feature_home_account),
+        if (actionLabel != null && onAction != null) {
+            Text(
+                text = actionLabel,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .clickable(onClick = onAction)
+                    .padding(vertical = 4.dp),
             )
         }
-        DropdownMenu(expanded = menuOpen && user != null, onDismissRequest = { menuOpen = false }) {
-            if (user != null) {
-                Column(Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
-                    Text(user.fullName, style = MaterialTheme.typography.titleSmall)
-                    Text(user.email, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/**
+ * Maniro "Popular Product" horizontal carousel:
+ * Rounded squircle tiles with photo on light grey background + title below.
+ */
+@Composable
+private fun PopularProductsRow(
+    featured: List<Product>,
+    onProductClick: (String) -> Unit,
+) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        items(featured, key = { it.id }) { product ->
+            Column(
+                modifier = Modifier
+                    .width(96.dp)
+                    .clickable { onProductClick(product.id) },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .clip(RoundedCornerShape(20.dp)),
+                ) {
+                    ProductImage(
+                        url = product.imageUrl,
+                        contentDescription = product.title,
+                        shape = RoundedCornerShape(20.dp),
+                        padding = PaddingValues(Spacing.sm),
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
-                HorizontalDivider()
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.feature_home_sign_out)) },
-                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
-                    onClick = {
-                        menuOpen = false
-                        onSignOutClick()
-                    },
+                Text(
+                    text = product.title,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
     }
 }
 
+/**
+ * Maniro Minimalist Category Filter Pills:
+ * - "All" pill (selected = solid black background, white text)
+ * - Category pills (unselected = soft grey background, dark text)
+ */
 @Composable
-private fun LoadingContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
-        SkeletonBox(Modifier.padding(horizontal = Spacing.lg).fillMaxWidth(0.4f).height(24.dp))
-        Row(Modifier.padding(start = Spacing.lg), horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
-            repeat(2) { FeaturedProductCardSkeleton() }
+private fun CategoryPillRow(
+    categories: List<Category>,
+    selectedSlug: String?,
+    onSelect: (String?) -> Unit,
+    onCategoryDoubleClick: (Category) -> Unit,
+) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        // "All" pill
+        item(key = "all") {
+            val isSelected = selectedSlug == null
+            Surface(
+                onClick = { onSelect(null) },
+                shape = PillShape,
+                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
+                contentColor = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant,
+            ) {
+                Text(
+                    text = stringResource(R.string.feature_home_all_categories),
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.padding(horizontal = Spacing.lg, vertical = 8.dp),
+                )
+            }
         }
-        repeat(2) {
-            Row(Modifier.padding(horizontal = Spacing.lg), horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                SkeletonBox(Modifier.weight(1f).height(104.dp), MaterialTheme.shapes.large)
-                SkeletonBox(Modifier.weight(1f).height(104.dp), MaterialTheme.shapes.large)
+
+        // Each category
+        items(categories, key = { it.slug }) { category ->
+            val isSelected = selectedSlug == category.slug
+            Surface(
+                onClick = {
+                    if (isSelected) {
+                        onCategoryDoubleClick(category)
+                    } else {
+                        onSelect(category.slug)
+                    }
+                },
+                shape = PillShape,
+                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
+                contentColor = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant,
+            ) {
+                Text(
+                    text = category.name,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.padding(horizontal = Spacing.lg, vertical = 8.dp),
+                )
             }
         }
     }
 }
 
-@Preview
+/** "Added X to cart · View cart", or why it failed. Shown once per tap. */
+@Composable
+private fun CartMessageSnackbar(
+    message: CartMessage?,
+    host: SnackbarHostState,
+    onViewCart: () -> Unit,
+    onShown: () -> Unit,
+) {
+    val text = when (message) {
+        is CartMessage.Added -> stringResource(R.string.feature_home_added, message.title)
+        is CartMessage.Failed -> errorText(message.error).first
+        null -> null
+    }
+    val action = stringResource(R.string.feature_home_view_cart)
+    LaunchedEffect(message) {
+        if (message == null || text == null) return@LaunchedEffect
+        val result = host.showSnackbar(
+            text,
+            actionLabel = if (message is CartMessage.Added) action else null,
+            duration = SnackbarDuration.Short,
+        )
+        onShown()
+        if (result == SnackbarResult.ActionPerformed) onViewCart()
+    }
+}
+
+@Composable
+private fun LoadingContent() {
+    Column(
+        modifier = Modifier.padding(top = Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+    ) {
+        Row(
+            Modifier.padding(horizontal = Spacing.lg),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            repeat(4) {
+                SkeletonBox(Modifier.size(96.dp), RoundedCornerShape(20.dp))
+            }
+        }
+        Row(
+            Modifier.padding(horizontal = Spacing.lg),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            repeat(2) {
+                SkeletonBox(Modifier.weight(1f).height(240.dp), RoundedCornerShape(18.dp))
+            }
+        }
+    }
+}
+
+@Preview(widthDp = 390, heightDp = 900)
 @Composable
 private fun HomeScreenPreview() {
-    val category = Category("electronics", "Electronics")
-    val product = Product("1", "Wireless Headphones", "", Money(99.0, "USD"), category, "", Rating(4.6, 210))
+    val category = Category("mens-clothing", "Men's clothing")
+    val product = Product("3", "Mens Cotton Jacket", "", Money(55.99, "USD"), category, "", Rating(4.7, 500))
     CatalogueTheme {
         HomeScreen(
-            state = HomeUiState.Success(CatalogueHome(listOf(product, product.copy(id = "2")), listOf(category, Category("jewelery", "Jewelery")))),
-            onSearchClick = {}, onProductClick = {}, onCategoryClick = {}, onRetry = {}, onRefresh = {},
+            state = HomeUiState.Success(CatalogueHome(listOf(product), listOf(category)), picks = listOf(product)),
+            onSearchClick = {},
+            onProductClick = {},
+            onCategoryClick = {},
+            onRetry = {},
+            onRefresh = {},
         )
     }
 }

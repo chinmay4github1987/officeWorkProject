@@ -10,8 +10,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,11 +22,13 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -34,12 +39,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
+import com.chinmay.catalogue.core.designsystem.icon.CatalogueIcons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,8 +49,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -60,6 +60,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,10 +70,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chinmay.catalogue.core.designsystem.component.readableWidth
 import com.chinmay.catalogue.core.designsystem.component.catalogueTextFieldColors
+import com.chinmay.catalogue.core.designsystem.component.CircleButtonStyle
+import com.chinmay.catalogue.core.designsystem.component.CircleIconButton
 import com.chinmay.catalogue.core.designsystem.component.MessageState
 import com.chinmay.catalogue.core.designsystem.component.PrimaryButton
 import com.chinmay.catalogue.core.designsystem.component.SkeletonBox
 import com.chinmay.catalogue.core.designsystem.theme.CatalogueTheme
+import com.chinmay.catalogue.core.designsystem.theme.PillShape
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
 import com.chinmay.catalogue.core.model.Cart
 import com.chinmay.catalogue.core.model.CartItem
@@ -109,7 +113,6 @@ internal fun CartRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CartScreen(
     state: CartUiState,
@@ -125,15 +128,24 @@ internal fun CartScreen(
     onRetry: () -> Unit,
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { if (state !is CartUiState.Sent) Text(stringResource(R.string.feature_cart_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.feature_cart_back))
-                    }
-                },
-            )
+            // Like the reference's "Details" header: round back button, bold centred title.
+            Box(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = Spacing.lg, vertical = Spacing.md)) {
+                CircleIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.feature_cart_back),
+                    onClick = onBack,
+                    modifier = Modifier.align(Alignment.CenterStart),
+                )
+                if (state !is CartUiState.Sent) {
+                    Text(
+                        stringResource(R.string.feature_cart_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.align(Alignment.Center).semantics { heading() },
+                    )
+                }
+            }
         },
         // The total and the call to action stay visible however long the cart is.
         bottomBar = {
@@ -186,17 +198,9 @@ private fun CartContent(
 ) {
     LazyColumn(
         modifier = Modifier.readableWidth(720.dp).fillMaxSize().imePadding(),
-        contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, top = Spacing.sm, bottom = Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg + 4.dp),
     ) {
-        item {
-            Text(
-                pluralStringResource(R.plurals.feature_cart_item_count, state.cart.itemCount, state.cart.itemCount),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-            )
-        }
         items(state.cart.items, key = { it.product.id }) { item ->
             CartItemRow(
                 item = item,
@@ -219,13 +223,17 @@ private fun CartContent(
                 minLines = 3,
                 enabled = !state.isSending,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm),
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
 }
 
+/**
+ * One product in the cart, in the reference's style: photo on a grey rounded tile; category in small grey text,
+ * name in bold, line price; a round remove button top right and a pill quantity stepper bottom right.
+ */
 @Composable
 private fun CartItemRow(
     item: CartItem,
@@ -235,93 +243,116 @@ private fun CartItemRow(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        shape = MaterialTheme.shapes.large,
-        modifier = modifier.fillMaxWidth(),
+    Row(
+        modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md + 2.dp),
     ) {
-        Row(Modifier.padding(Spacing.md), horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
-            ProductImage(
-                url = item.product.imageUrl,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp).clickable(onClick = onClick),
-                padding = PaddingValues(8.dp),
-            )
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Row(verticalAlignment = Alignment.Top) {
+        ProductImage(
+            url = item.product.imageUrl,
+            contentDescription = null,
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.size(104.dp).clickable(onClick = onClick),
+            padding = PaddingValues(Spacing.md),
+        )
+        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f).clickable(onClick = onClick)) {
                     Text(
-                        item.product.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        maxLines = 2,
+                        item.product.category.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f).clickable(onClick = onClick),
                     )
-                    IconButton(onClick = onRemove, enabled = !isUpdating, modifier = Modifier.size(32.dp)) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = stringResource(R.string.feature_cart_remove, item.product.title),
-                            modifier = Modifier.size(18.dp),
+                    Text(item.product.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+                CircleIconButton(
+                    icon = Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.feature_cart_remove, item.product.title),
+                    onClick = onRemove,
+                    enabled = !isUpdating,
+                    size = 36.dp,
+                    modifier = Modifier.padding(start = Spacing.xs),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(item.lineTotal.formatted(), style = MaterialTheme.typography.titleMedium)
+                    if (item.quantity > 1) {
+                        Text(
+                            stringResource(R.string.feature_cart_each, item.product.price.formatted()),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
-                Text(
-                    stringResource(R.string.feature_cart_each, item.product.price.formatted()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    QuantityStepper(item.quantity, item.product.title, isUpdating, onQuantityChange)
-                    Text(
-                        item.lineTotal.formatted(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                QuantityStepper(item.quantity, item.product.title, isUpdating, onQuantityChange)
             }
         }
     }
 }
 
-/** − n +. At 1, minus becomes a bin, so it's obvious the next tap removes the product. */
+/**
+ * A grey pill: white "−" circle, the number, lime "+" circle. At 1, minus becomes a bin, so it's obvious the next
+ * tap removes the product.
+ */
 @Composable
 private fun QuantityStepper(quantity: Int, title: String, isUpdating: Boolean, onChange: (Int) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        FilledTonalIconButton(onClick = { onChange(quantity - 1) }, enabled = !isUpdating, modifier = Modifier.size(36.dp)) {
-            if (quantity <= 1) {
-                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.feature_cart_remove, title), modifier = Modifier.size(18.dp))
-            } else {
-                val label = stringResource(R.string.feature_cart_decrease, title)
-                Text("−", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { contentDescription = label })
-            }
-        }
-        Text(
-            quantity.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(min = 28.dp).semantics { liveRegion = LiveRegionMode.Polite },
-        )
-        FilledTonalIconButton(
-            onClick = { onChange(quantity + 1) },
-            enabled = !isUpdating && quantity < Cart.MAX_QUANTITY,
-            modifier = Modifier.size(36.dp),
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.feature_cart_increase, title), modifier = Modifier.size(18.dp))
+    Surface(shape = PillShape, color = MaterialTheme.colorScheme.surfaceContainer) {
+        Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            CircleIconButton(
+                icon = if (quantity <= 1) Icons.Filled.Delete else CatalogueIcons.Minus,
+                contentDescription = stringResource(if (quantity <= 1) R.string.feature_cart_remove else R.string.feature_cart_decrease, title),
+                onClick = { onChange(quantity - 1) },
+                enabled = !isUpdating,
+                size = 34.dp,
+            )
+            Text(
+                quantity.toString(),
+                style = MaterialTheme.typography.titleSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(min = 32.dp).semantics { liveRegion = LiveRegionMode.Polite },
+            )
+            CircleIconButton(
+                icon = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.feature_cart_increase, title),
+                onClick = { onChange(quantity + 1) },
+                enabled = !isUpdating && quantity < Cart.MAX_QUANTITY,
+                style = CircleButtonStyle.Accent,
+                size = 34.dp,
+            )
         }
     }
 }
 
+/** The checkout sheet: rounded top, total on the right in large type, the lime gradient button below. */
 @Composable
 private fun SendBar(state: CartUiState.Ready, onSend: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest, shadowElevation = 8.dp) {
+    Surface(
+        color = MaterialTheme.colorScheme.background,
+        shadowElevation = 0.dp,
+    ) {
         Column(
-            Modifier.navigationBarsPadding().padding(horizontal = Spacing.lg, vertical = Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            Modifier.navigationBarsPadding().padding(start = Spacing.xl, end = Spacing.xl, top = Spacing.lg, bottom = Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.feature_cart_total), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                Text(state.cart.total.formatted(), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.feature_cart_total), style = MaterialTheme.typography.titleMedium)
+                    // Announced by screen readers when quantities change.
+                    Text(
+                        pluralStringResource(R.plurals.feature_cart_item_count, state.cart.itemCount, state.cart.itemCount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
+                Text(
+                    state.cart.total.formatted(),
+                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             }
             PrimaryButton(
                 text = stringResource(R.string.feature_cart_send),

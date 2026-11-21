@@ -1,0 +1,81 @@
+package com.chinmay.catalogue.core.data.repository
+
+import com.chinmay.catalogue.core.model.DataError
+import com.chinmay.catalogue.core.model.DataResult
+import com.chinmay.catalogue.core.network.mail.MailSendException
+import com.chinmay.catalogue.core.network.mail.OutgoingMail
+import com.chinmay.catalogue.core.network.mail.SmtpMailer
+import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+
+/**
+ * Delivers an enquiry's fields to the sales team and says whether that was confirmed. "_subject" is the email
+ * subject; "email" and "name" are the customer (reply-to). Two ways: Formspree ([FormspreeClient], the default and
+ * the one to ship) or a demo mailbox over SMTP ([SmtpEnquirySender], only when its settings are in android/.env).
+ */
+internal interface EnquirySender {
+    suspend fun submit(fields: Map<String, String>): DataResult<Unit>
+}
+
+/**
+ * Emails the enquiry from the demo mailbox (e.g. Gmail) to the sales inbox, straight from the app. For client demos
+ * only: the mailbox password is inside the APK.
+ */
+internal class SmtpEnquirySender @Inject constructor(private val mailer: SmtpMailer) : EnquirySender {
+
+    override suspend fun submit(fields: Map<String, String>): DataResult<Unit> = try {
+        mailer.send(mail(fields))
+        DataResult.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: MailSendException) {
+        DataResult.Failure(if (e.isConnectionProblem) DataError.Network else DataError.Server(message = null))
+    }
+
+    internal companion object {
+        /** Field labels for the email body, in reading order; anything else follows with its own name. */
+        private val LABELS = linkedMapOf(
+            "reference" to "Reference",
+            "submittedAt" to "Submitted",
+            "name" to "Customer name",
+            "email" to "Customer email",
+            "phone" to "Customer phone",
+            "company" to "Company",
+            "productId" to "Product ID",
+            "productName" to "Product name",
+            "productCategory" to "Category",
+            "productUrl" to "Product link",
+            "itemCount" to "Items",
+            "items" to "Cart",
+            "total" to "Total",
+            "message" to "Message",
+        )
+
+        fun mail(fields: Map<String, String>): OutgoingMail {
+            val shown = fields.filterKeys { !it.startsWith("_") }.filterValues { it.isNotBlank() }
+            val ordered = LABELS.keys.filter { it in shown } + shown.keys.filter { it !in LABELS }
+            val body = buildString {
+                appendLine("A customer has sent an enquiry from the product catalogue app.")
+                appendLine()
+                ordered.forEach { key ->
+                    val value = shown.getValue(key)
+                    val label = LABELS[key] ?: key
+                    if ('\n' in value || key == "message") {
+                        appendLine("$label:")
+                        appendLine(value)
+                    } else {
+                        appendLine("$label: $value")
+                    }
+                }
+                appendLine()
+                append("Reply to this email to answer the customer directly.")
+            }
+            return OutgoingMail(
+                subject = fields["_subject"] ?: "New enquiry",
+                body = body,
+                replyToAddress = fields["email"].orEmpty(),
+                replyToName = fields["name"].orEmpty(),
+            )
+        }
+    }
+}

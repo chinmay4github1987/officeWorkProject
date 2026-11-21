@@ -5,7 +5,7 @@
     <string name="feature_search_clear">Clear search</string>
     <string name="feature_search_required">Enter a search term</string>
     <string name="feature_search_idle_title">Find a product</string>
-    <string name="feature_search_idle_message">Search by name, description or category, then tap Search.</string>
+    <string name="feature_search_idle_message">Search by name, description or category, then tap the search button.</string>
     <string name="feature_search_empty_title">No matches for “%1$s”</string>
     <string name="feature_search_suggestions_title">Popular searches</string>
     <string-array name="feature_search_suggestions">
@@ -16,8 +16,17 @@
         <item>shirt</item>
     </string-array>
     <string name="feature_search_empty_message">Check the spelling, or try a broader word like “shirt” or “drive”.</string>
-    <plurals name="feature_search_results">
-        <item quantity="one">%1$d result for “%2$s”</item>
-        <item quantity="other">%1$d results for “%2$s”</item>
+    <string name="feature_search_all">All</string>
+    <string name="feature_search_recent_title">Recent searches</string>
+    <string name="feature_search_recent_clear">Clear</string>
+    <string name="feature_search_suggestions_heading">Suggestions</string>
+    <plurals name="feature_search_load_more">
+        <item quantity="one">Load %1$d more result</item>
+        <item quantity="other">Load more (%1$d left)</item>
+    </plurals>
+    <string name="feature_search_results_title">Results for “%1$s”</string>
+    <plurals name="feature_search_results_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
     </plurals>
 </resources>
