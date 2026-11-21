@@ -14,6 +14,8 @@ doc/
 .claude/
 **/.claude/
 CLAUDE.md
+*.md
+**/*.md
 
 # Windows / Installer / Temp files
 *.ms
