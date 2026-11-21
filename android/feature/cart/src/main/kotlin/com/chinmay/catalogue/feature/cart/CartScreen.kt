@@ -67,6 +67,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chinmay.catalogue.core.designsystem.component.readableWidth
+import com.chinmay.catalogue.core.designsystem.component.catalogueTextFieldColors
 import com.chinmay.catalogue.core.designsystem.component.MessageState
 import com.chinmay.catalogue.core.designsystem.component.PrimaryButton
 import com.chinmay.catalogue.core.designsystem.component.SkeletonBox
@@ -183,7 +185,7 @@ private fun CartContent(
     onDismissError: () -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().imePadding(),
+        modifier = Modifier.readableWidth(720.dp).fillMaxSize().imePadding(),
         contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.xl),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
@@ -208,6 +210,7 @@ private fun CartContent(
         state.actionError?.let { error -> item { ErrorBanner(error, onDismissError) } }
         item {
             OutlinedTextField(
+                colors = catalogueTextFieldColors(),
                 value = state.message,
                 onValueChange = onMessageChange,
                 label = { Text(stringResource(R.string.feature_cart_message)) },
@@ -362,7 +365,7 @@ private fun ErrorBanner(error: com.chinmay.catalogue.core.model.DataError, onDis
 
 @Composable
 private fun CallToAction(title: String, message: String, action: String, onAction: () -> Unit, icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.lg)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).readableWidth(480.dp).padding(horizontal = Spacing.lg)) {
         MessageState(icon = icon, title = title, message = message)
         PrimaryButton(action, onClick = onAction)
     }
@@ -373,7 +376,7 @@ private fun Sent(state: CartUiState.Sent, onContinueBrowsing: () -> Unit) {
     // After sending, Back leaves the cart instead of showing the thank-you again.
     BackHandler(onBack = onContinueBrowsing)
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.xl),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).readableWidth(480.dp).padding(Spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.lg, Alignment.CenterVertically),
     ) {

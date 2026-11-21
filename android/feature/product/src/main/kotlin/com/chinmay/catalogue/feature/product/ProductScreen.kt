@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,6 +52,7 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,6 +63,7 @@ import com.chinmay.catalogue.core.designsystem.component.PrimaryButton
 import com.chinmay.catalogue.core.designsystem.component.PrimaryButtonHeight
 import com.chinmay.catalogue.core.designsystem.component.RatingBadge
 import com.chinmay.catalogue.core.designsystem.component.SkeletonBox
+import com.chinmay.catalogue.core.designsystem.component.WindowWidth
 import com.chinmay.catalogue.core.designsystem.theme.CatalogueTheme
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
 import com.chinmay.catalogue.core.model.Category
@@ -177,38 +180,64 @@ private fun ProductDetails(
     onCategoryClick: (Category) -> Unit,
     modifier: Modifier,
 ) {
-    Column(
-        modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = Spacing.lg),
-        verticalArrangement = Arrangement.spacedBy(Spacing.md),
-    ) {
+    val image = @Composable { imageModifier: Modifier ->
         ProductImage(
             url = product.imageUrl,
             contentDescription = product.title,
-            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+            modifier = imageModifier,
             shape = MaterialTheme.shapes.extraLarge,
             padding = PaddingValues(Spacing.xxl),
         )
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            AssistChip(onClick = { onCategoryClick(product.category) }, label = { Text(product.category.name) })
-            RatingBadge(product.rating.average, product.rating.count)
-        }
-        Text(
-            product.title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier
-                .semantics { heading() }
-                .onGloballyPositioned { onTitlePositioned((it.positionInParent().y + it.size.height).toInt()) },
-        )
-        Text(product.price.formatted(), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
-        HorizontalDivider(Modifier.padding(vertical = Spacing.sm), color = MaterialTheme.colorScheme.outlineVariant)
-        Text(
-            stringResource(R.string.feature_product_about),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.semantics { heading() },
-        )
-        // A long description no longer pushes everything else away; the preview is enough to scan.
-        ExpandableText(product.description, Modifier.padding(bottom = Spacing.xl))
     }
+    // Phones and folded foldables: image above details, one scroll. Wide windows (unfolded foldables in
+    // landscape, tablets, Chromebooks, TV): image on the left, details scrolling on the right.
+    if (WindowWidth.current() >= WindowWidth.Expanded) {
+        Row(
+            modifier.fillMaxSize().padding(horizontal = Spacing.xl),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xl),
+        ) {
+            image(Modifier.weight(1f).fillMaxHeight().padding(bottom = Spacing.lg))
+            Column(
+                Modifier.weight(1f).fillMaxHeight().verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md),
+            ) {
+                DetailsText(product, onTitlePositioned, onCategoryClick)
+            }
+        }
+    } else {
+        Column(
+            modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            image(Modifier.fillMaxWidth().aspectRatio(1f))
+            DetailsText(product, onTitlePositioned, onCategoryClick)
+        }
+    }
+}
+
+@Composable
+private fun DetailsText(product: Product, onTitlePositioned: (Int) -> Unit, onCategoryClick: (Category) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        AssistChip(onClick = { onCategoryClick(product.category) }, label = { Text(product.category.name.uppercase(), style = MaterialTheme.typography.labelMedium) })
+        RatingBadge(product.rating.average, product.rating.count)
+    }
+    Text(
+        product.title,
+        style = MaterialTheme.typography.headlineMedium,
+        modifier = Modifier
+            .semantics { heading() }
+            .onGloballyPositioned { onTitlePositioned((it.positionInParent().y + it.size.height).toInt()) },
+    )
+    Text(product.price.formatted(), style = MaterialTheme.typography.headlineSmall.copy(fontFamily = MaterialTheme.typography.titleLarge.fontFamily, fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
+    HorizontalDivider(Modifier.padding(vertical = Spacing.sm), color = MaterialTheme.colorScheme.outlineVariant)
+    Text(
+        stringResource(R.string.feature_product_about).uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.semantics { heading() },
+    )
+    // A long description no longer pushes everything else away; the preview is enough to scan.
+    ExpandableText(product.description, Modifier.padding(bottom = Spacing.xl))
 }
 
 @Composable

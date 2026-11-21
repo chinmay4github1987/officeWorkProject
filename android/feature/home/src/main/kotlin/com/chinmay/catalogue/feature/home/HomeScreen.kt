@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -28,7 +31,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -51,7 +55,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chinmay.catalogue.core.designsystem.component.ReadableWidth
 import com.chinmay.catalogue.core.designsystem.component.SearchPill
+import com.chinmay.catalogue.core.designsystem.component.WindowWidth
 import com.chinmay.catalogue.core.designsystem.component.SectionHeader
 import com.chinmay.catalogue.core.designsystem.component.SkeletonBox
 import com.chinmay.catalogue.core.designsystem.theme.CatalogueTheme
@@ -107,6 +113,7 @@ internal fun HomeScreen(
     onSignInClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
 ) {
+    val columns = WindowWidth.gridColumns()
     Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
         PullToRefreshBox(
             isRefreshing = (state as? HomeUiState.Success)?.isRefreshing == true,
@@ -126,7 +133,8 @@ internal fun HomeScreen(
                         SearchPill(
                             stringResource(R.string.feature_home_search_placeholder),
                             onClick = onSearchClick,
-                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+                            // Search fields don't need to span a whole tablet or TV screen.
+                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm).widthIn(max = ReadableWidth),
                         )
                     }
                 }
@@ -151,17 +159,18 @@ internal fun HomeScreen(
                             }
                         }
                         item { SectionHeader(stringResource(R.string.feature_home_categories)) }
-                        // A simple 2-column grid inside the list (a nested LazyVerticalGrid can't scroll inside a LazyColumn).
-                        state.home.categories.chunked(2).forEachIndexed { row, pair ->
-                            item(key = "categories-$row") {
+                        // A simple grid inside the list (a nested LazyVerticalGrid can't scroll inside a LazyColumn).
+                        // 2 columns on phones, 3 on unfolded foldables and portrait tablets, 4 on wide windows and TV.
+                        state.home.categories.chunked(columns).forEachIndexed { row, cells ->
+                            item(key = "categories-$columns-$row") {
                                 Row(
                                     Modifier.fillMaxWidth().padding(horizontal = Spacing.lg),
                                     horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                                 ) {
-                                    pair.forEachIndexed { col, category ->
-                                        CategoryCard(category, index = row * 2 + col, onClick = { onCategoryClick(category) }, modifier = Modifier.weight(1f))
+                                    cells.forEachIndexed { col, category ->
+                                        CategoryCard(category, index = row * columns + col, onClick = { onCategoryClick(category) }, modifier = Modifier.weight(1f))
                                     }
-                                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                                    repeat(columns - cells.size) { Spacer(Modifier.weight(1f)) }
                                 }
                             }
                         }
@@ -174,29 +183,43 @@ internal fun HomeScreen(
 
 @Composable
 private fun Header(account: HomeAccount, onCartClick: () -> Unit, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
-    Column(
-        Modifier.padding(start = Spacing.lg, end = Spacing.sm).padding(top = Spacing.md),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-    ) {
+    Column(Modifier.padding(horizontal = Spacing.lg).padding(top = Spacing.lg)) {
+        // Top row: small gold "eyebrow" (who you are / the collection) with round actions on the right.
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                account.user?.let { stringResource(R.string.feature_home_greeting, it.firstName) } ?: stringResource(R.string.feature_home_title),
-                style = MaterialTheme.typography.displaySmall,
+                (account.user?.let { stringResource(R.string.feature_home_greeting, it.firstName) } ?: stringResource(R.string.feature_home_eyebrow)).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).semantics { heading() },
+                modifier = Modifier.weight(1f),
             )
             AccountButton(account, onSignInClick, onSignOutClick)
+            Spacer(Modifier.width(Spacing.sm))
             CartButton(account.cartCount, onCartClick)
         }
+        Spacer(Modifier.height(Spacing.md))
+        // Editorial headline: large serif, the one place the page "speaks".
+        Text(
+            stringResource(R.string.feature_home_title),
+            style = MaterialTheme.typography.displaySmall,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(Spacing.xs))
         Text(
             stringResource(R.string.feature_home_subtitle),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = Spacing.sm),
         )
     }
 }
+
+/** Round, softly raised header actions (44dp: comfortably above the 40dp minimum and easy to hit with D-pad). */
+@Composable
+private fun headerButtonColors() = IconButtonDefaults.filledTonalIconButtonColors(
+    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    contentColor = MaterialTheme.colorScheme.onSurface,
+)
 
 /** Cart with a count badge. The badge is part of the button's label for screen readers. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -207,7 +230,11 @@ private fun CartButton(count: Int, onClick: () -> Unit) {
     } else {
         stringResource(R.string.feature_home_cart)
     }
-    IconButton(onClick = onClick, modifier = Modifier.semantics { contentDescription = label }) {
+    FilledTonalIconButton(
+        onClick = onClick,
+        colors = headerButtonColors(),
+        modifier = Modifier.size(44.dp).semantics { contentDescription = label },
+    ) {
         BadgedBox(badge = { if (count > 0) Badge { Text(if (count > 99) "99+" else count.toString()) } }) {
             Icon(Icons.Filled.ShoppingCart, contentDescription = null)
         }
@@ -220,7 +247,11 @@ private fun AccountButton(account: HomeAccount, onSignInClick: () -> Unit, onSig
     var menuOpen by remember { mutableStateOf(false) }
     val user = account.user
     Box {
-        IconButton(onClick = { if (user == null) onSignInClick() else menuOpen = true }) {
+        FilledTonalIconButton(
+            onClick = { if (user == null) onSignInClick() else menuOpen = true },
+            colors = headerButtonColors(),
+            modifier = Modifier.size(44.dp),
+        ) {
             Icon(
                 Icons.Filled.AccountCircle,
                 contentDescription = stringResource(if (user == null) R.string.feature_home_sign_in else R.string.feature_home_account),

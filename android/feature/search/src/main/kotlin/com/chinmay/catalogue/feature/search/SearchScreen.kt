@@ -50,6 +50,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chinmay.catalogue.core.designsystem.component.catalogueTextFieldColors
 import com.chinmay.catalogue.core.designsystem.component.MessageState
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
 import com.chinmay.catalogue.core.ui.DataErrorState
@@ -107,6 +108,7 @@ internal fun SearchScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.feature_search_back))
                 }
                 OutlinedTextField(
+                    colors = catalogueTextFieldColors(),
                     value = state.query,
                     onValueChange = onQueryChange,
                     modifier = Modifier.weight(1f).focusRequester(focusRequester),

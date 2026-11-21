@@ -70,6 +70,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.chinmay.catalogue.core.designsystem.component.readableWidth
+import com.chinmay.catalogue.core.designsystem.component.catalogueTextFieldColors
 import com.chinmay.catalogue.core.designsystem.component.PrimaryButton
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
 import com.chinmay.catalogue.core.model.Product
@@ -137,6 +139,7 @@ private fun Form(state: EnquiryUiState, onFieldChange: (EnquiryField, String) ->
             .fillMaxSize()
             .imePadding()
             .verticalScroll(rememberScrollState())
+            .readableWidth()
             .padding(horizontal = Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
@@ -210,6 +213,7 @@ private fun FormField(
     val error = state.errors[field]
     val value = state.form.valueOf(field)
     OutlinedTextField(
+        colors = catalogueTextFieldColors(),
         value = value,
         onValueChange = { onFieldChange(field, it) },
         label = { Text(stringResource(label)) },
@@ -282,7 +286,7 @@ private fun ThankYou(state: EnquiryUiState, onBackToProduct: () -> Unit, onConti
 
     val firstName = state.form.name.trim().substringBefore(' ')
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.xl),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).readableWidth(480.dp).padding(Spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.lg, Alignment.CenterVertically),
     ) {

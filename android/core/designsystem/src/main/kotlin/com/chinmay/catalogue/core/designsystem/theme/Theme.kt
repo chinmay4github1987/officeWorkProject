@@ -7,14 +7,19 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 
-private val LocalExtendedColors = staticCompositionLocalOf { LightExtendedColors }
+private val LocalExtendedColors = staticCompositionLocalOf { DarkExtendedColors }
+
+/** The brand look is dark. Also used by :app to pick light status-bar icons. */
+const val BRAND_IS_DARK = true
 
 /**
  * The app theme. Dynamic colour (Material You) is deliberately off: the business wants a consistent brand.
+ * The brand is "dark luxe", so the app is dark whatever the system setting. Set [BRAND_IS_DARK] to false
+ * to follow the system instead (the light scheme is the same brand on ivory).
  */
 @Composable
 fun CatalogueTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = BRAND_IS_DARK || isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(LocalExtendedColors provides if (darkTheme) DarkExtendedColors else LightExtendedColors) {

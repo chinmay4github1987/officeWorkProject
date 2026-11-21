@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android TV launcher banner (320x180dp): the bag mark on the brand charcoal, until brand artwork arrives. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:fillColor="#0F0F12" android:pathData="M0,0 L320,0 L320,180 L0,180 Z" />
+    <path android:fillColor="#D6B57A" android:pathData="M136,82 L184,82 L190,128 L130,128 Z" />
+    <path
+        android:pathData="M147,88 L147,74 A13,13 0 0 1 173,74 L173,88"
+        android:strokeWidth="6"
+        android:strokeColor="#F2EBDD"
+        android:strokeLineCap="round" />
+    <path android:fillColor="#D6B57A" android:pathData="M120,146 L200,146 L200,148 L120,148 Z" />
+</vector>

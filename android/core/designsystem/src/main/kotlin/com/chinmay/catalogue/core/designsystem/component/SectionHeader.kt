@@ -14,7 +14,7 @@ import com.chinmay.catalogue.core.designsystem.theme.Spacing
 fun SectionHeader(title: String, modifier: Modifier = Modifier, subtitle: String? = null) {
     Column(modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
         // Marked as a heading so screen-reader users can jump between sections.
-        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+        Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
         if (subtitle != null) {
             Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

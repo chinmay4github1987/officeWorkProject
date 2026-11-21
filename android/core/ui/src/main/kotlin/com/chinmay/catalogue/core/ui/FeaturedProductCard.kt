@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.chinmay.catalogue.core.designsystem.component.focusRing
 import com.chinmay.catalogue.core.designsystem.component.pressScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,7 +39,7 @@ fun FeaturedProductCard(product: Product, rank: Int, onClick: () -> Unit, modifi
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier.pressScale(interaction).width(FeaturedCardWidth),
+        modifier = modifier.pressScale(interaction).focusRing(interaction, MaterialTheme.shapes.large).width(FeaturedCardWidth),
     ) {
         Box {
             ProductImage(

@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.chinmay.catalogue.core.designsystem.component.focusRing
 import com.chinmay.catalogue.core.designsystem.component.pressScale
 import androidx.compose.ui.text.style.TextOverflow
 import com.chinmay.catalogue.core.designsystem.component.RatingBadge
@@ -28,7 +29,7 @@ fun ProductTile(product: Product, onClick: () -> Unit, modifier: Modifier = Modi
         interactionSource = interaction,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        modifier = modifier.pressScale(interaction),
+        modifier = modifier.pressScale(interaction).focusRing(interaction, MaterialTheme.shapes.large),
     ) {
         ProductImage(
             url = product.imageUrl,

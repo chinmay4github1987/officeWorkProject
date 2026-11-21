@@ -1,6 +1,8 @@
 <resources>
-    <!-- Only the window before Compose draws. Everything else is themed in :core:designsystem. -->
-    <style name="Theme.Catalogue" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Only the window before Compose draws (matches the dark brand background, so there is no white flash). -->
+    <style name="Theme.Catalogue" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>

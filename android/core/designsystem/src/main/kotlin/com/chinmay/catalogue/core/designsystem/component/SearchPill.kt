@@ -1,5 +1,6 @@
 package com.chinmay.catalogue.core.designsystem.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,8 +26,8 @@ fun SearchPill(placeholder: String, onClick: () -> Unit, modifier: Modifier = Mo
         onClick = onClick,
         shape = RoundedCornerShape(50),
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        tonalElevation = 1.dp,
-        shadowElevation = 1.dp,
+        // A hairline border instead of a shadow: shadows disappear on dark surfaces.
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = modifier.fillMaxWidth().height(52.dp),
     ) {
         Row(

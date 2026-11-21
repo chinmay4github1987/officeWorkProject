@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.chinmay.catalogue.core.designsystem.component.focusRing
 import com.chinmay.catalogue.core.designsystem.component.pressScale
 import com.chinmay.catalogue.core.designsystem.theme.CatalogueTheme
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
@@ -37,7 +38,7 @@ fun CategoryCard(category: Category, index: Int, onClick: () -> Unit, modifier: 
         interactionSource = interaction,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = container, contentColor = content),
-        modifier = modifier.pressScale(interaction).fillMaxWidth().height(104.dp),
+        modifier = modifier.pressScale(interaction).focusRing(interaction, MaterialTheme.shapes.large).fillMaxWidth().height(104.dp),
     ) {
         Box(Modifier.fillMaxWidth().padding(Spacing.lg)) {
             Text(

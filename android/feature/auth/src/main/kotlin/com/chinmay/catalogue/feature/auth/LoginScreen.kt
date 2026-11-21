@@ -53,6 +53,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chinmay.catalogue.core.designsystem.component.readableWidth
+import com.chinmay.catalogue.core.designsystem.component.catalogueTextFieldColors
 import com.chinmay.catalogue.core.designsystem.component.PrimaryButton
 import com.chinmay.catalogue.core.designsystem.theme.CatalogueTheme
 import com.chinmay.catalogue.core.designsystem.theme.Spacing
@@ -118,6 +120,8 @@ internal fun LoginScreen(
                 .fillMaxSize()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
+                // Phones: full width. Tablets, foldables, Chromebooks, TV: a centred, comfortable column.
+                .readableWidth(480.dp)
                 .padding(horizontal = Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
@@ -134,6 +138,7 @@ internal fun LoginScreen(
             Spacer(Modifier.height(Spacing.sm))
 
             OutlinedTextField(
+                colors = catalogueTextFieldColors(),
                 value = state.username,
                 onValueChange = onUsernameChange,
                 label = { Text(stringResource(R.string.feature_auth_username)) },
@@ -148,6 +153,7 @@ internal fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
+                colors = catalogueTextFieldColors(),
                 value = state.password,
                 onValueChange = onPasswordChange,
                 label = { Text(stringResource(R.string.feature_auth_password)) },
